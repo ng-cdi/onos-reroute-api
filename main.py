@@ -1,9 +1,9 @@
-from flask import Flask, redirect, url_for, request, render_template, send_file
-import requests, datetime, shutil, os, glob, uuid, json, onos_connect
+from flask import Flask, redirect, url_for, request, render_template, send_file, jsonify, make_response
+import requests, datetime, shutil, os, glob, uuid, json, onos_connect, reroute
 
 app = Flask(__name__)
 
-config = ""
+config = {}
 
 def load_json(filename):
     with open(filename) as f:
@@ -20,7 +20,8 @@ def load_config():
 
 @app.route('/api/get_intents', methods=['GET'])
 def get_intents():
-    
+    reroute.generate_routes(onos_connect.onos_get(onos_connect.url_builder(config.host, config.port, "/onos/v1/imr/imr/intentStats"), config.username, config.password))
+
     return make_response("UUID Not Found", 403)
 
 
