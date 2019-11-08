@@ -15,14 +15,15 @@ def load_config():
         config = load_json("config.json")
     except:
         config = load_json("config-default.json")
+    
 
 
 
 @app.route('/api/get_intents', methods=['GET'])
 def get_intents():
-    reroute.generate_routes(onos_connect.onos_get(onos_connect.url_builder(config.host, config.port, "/onos/v1/imr/imr/intentStats"), config.username, config.password))
+    routing_dict = reroute.generate_routes(config)
+    return jsonify(reroute.generate_intents(routing_dict, config))
 
-    return make_response("UUID Not Found", 403)
 
 
 if __name__ == '__main__':
