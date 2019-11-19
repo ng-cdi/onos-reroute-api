@@ -8,6 +8,9 @@ import uuid
 import json
 import onos_connect
 import reroute
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 app = Flask(__name__)
 
@@ -34,7 +37,10 @@ def push_intent():
 
     routing_dict = reroute.generate_routes(config)
 
-    if (!reroute.is_intent(routing_dict, new_intents)):
+    if (reroute.is_intent(routing_dict, new_intents, config)):
+        routing_dict.update(new_intents)
+        logging.info(json.dumps(reroute.generate_intents(routing_dict, config), indent=4, sort_keys=True))
+        # onos_connect.onos_post("")
 
     return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
 
