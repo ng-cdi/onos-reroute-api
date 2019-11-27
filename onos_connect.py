@@ -12,22 +12,16 @@ def auth_http(url, uname, passwd):
 
 
 def onos_get(url, uname, passwd):
-    # try:
     request = auth_http(url, uname, passwd)
     response = urllib.request.urlopen(request)
     return json.loads(response.read())
-    # except:
-    #     return ""
 
 
 def onos_post(url, uname, passwd, json_data):
-    try:
-        request = auth_http(url, uname, passwd)
-        request.add_header('Content-Type', 'application/json')
-        response = urllib.request.urlopen(request, data=json_data)
-        return json.loads(response.read())
-    except:
-        return ""
+    request = auth_http(url, uname, passwd)
+    request.add_header('Content-Type', 'application/json')
+    response = urllib.request.urlopen(request, data=bytes(json.dumps(json_data), encoding="utf-8"))
+    return json.loads(response.read())
 
 
 def url_builder(host, port, api):
