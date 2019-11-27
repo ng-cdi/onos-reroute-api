@@ -7,6 +7,8 @@ Retrieving all installed intents: ```/api/get_intents```
 Submitting a new intent(s): ```/api/push_intent```
 See python example in testClient directory.
 
+If the new intent is valid and accpeted by ONOS, a ```200``` code will be returned, otherwise a ```406``` code will be returned. 
+
 Example of a valid new intent request:
 ```json
 {
