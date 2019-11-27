@@ -19,13 +19,11 @@ def generate_routes(config):
         route.append(key[:22])
         # 1 hop intents
         if len(intents_dict["intents"][intent]["resources"]) == 0:
-            print("hit")
             for onos_host in hosts_dict["hosts"]:
                 # Some hosts aren't listed in /v1/hosts.. try the reverse too
                 if onos_host["id"] == key[:22] or onos_host["id"] == key[22:]:
                     if len(onos_host["locations"][0]["elementId"]) > 2:
                         route.append(onos_host["locations"][0]["elementId"])
-                        print(onos_host["locations"][0]["elementId"])
                         break
         # Multi-hop intents
         else:
