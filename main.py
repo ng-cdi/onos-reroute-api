@@ -16,7 +16,6 @@ app = Flask(__name__)
 
 config = {}
 
-
 def load_json(filename):
     with open(filename) as f:
         return json.load(f)
@@ -39,10 +38,11 @@ def push_intent():
 
     if (reroute.is_intent(routing_dict, new_intents, config)):
         routing_dict.update(new_intents)
-        logging.info(json.dumps(reroute.generate_intents(routing_dict, config), indent=4, sort_keys=True))
-        # onos_connect.onos_post("")
-
-    return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
+        # logging.info(json.dumps(reroute.generate_intents(routing_dict, config), indent=4, sort_keys=True))
+        logging.info(onos_connect.onos_post(onos_connect.url_builder(config.get("host"), config.get("port"), "/onos/v1/imr/imr/reRouteIntents"), config.get("username"), config.get("password"), reroute.generate_intents(routing_dict, config)))
+        return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
+    else
+        return json.dumps({'unsuccesful': False}), 406, {'ContentType': 'application/json'}
 
 
 @app.route('/api/get_intents', methods=['GET'])
