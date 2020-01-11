@@ -68,7 +68,8 @@ def generate_routes(config):
                     route.append(intent[monitored_intent["key"]][0]["deviceId"])
                 
                 # multi hop intents
-                elif len(intent[monitored_intent["key"]]) > 1:
+                # elif len(intent[monitored_intent["key"]]) > 1:
+                else:
                     src_sw = ""
                     dst_sw = ""
                     devices = []
@@ -80,6 +81,7 @@ def generate_routes(config):
                                 dst_sw = onos_host["locations"][0]["elementId"]
                         devices.append(intent[key][i]["deviceId"])
                     
+                    # Remove local and remote switches - see what's left
                     devices.remove(src_sw)
                     devices.remove(dst_sw)
 
@@ -98,6 +100,9 @@ def generate_routes(config):
                     elif len(devices) > 1:
                         route.append(src_sw)
                         route = route + calculate_path(devices, links_dict, src_sw, dst_sw)
+                    
+                    else:
+                        logging.warning("Could not calculate a route for " + key)
 
                 route.append(monitored_intent["outElements"][0])     
                 route = list(dict.fromkeys(route))
