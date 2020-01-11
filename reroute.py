@@ -1,39 +1,137 @@
 import json
 import onos_connect
-import logging
+import logging, random
 
 logging.basicConfig(level=logging.INFO)
 
+def is_link(dev1, dev2, links_dict):
+    for link in links_dict["links"]:
+        if link["src"]["device"] == dev1 and link["dst"]["device"] == dev2:
+            return True
+    return False
+
+def calculate_path(devices, links_dict, src_sw, dst_sw):
+    current_devices = []
+    shuffle_devices = devices.copy()
+    random.shuffle(shuffle_devices)
+    if is_link(src_sw, shuffle_devices[0], links_dict):
+        current_devices.append(shuffle_devices[0])
+        while True:
+            if is_link(shuffle_devices[0], shuffle_devices[1], links_dict):
+                shuffle_devices.remove(shuffle_devices[0])
+                current_devices.append(shuffle_devices[0])
+            else:
+                return calculate_path(devices, links_dict, src_sw, dst_sw)
+            if len(shuffle_devices) == 1 and is_link(shuffle_devices[0], dst_sw, links_dict):
+                current_devices.append(shuffle_devices[0])
+                current_devices.append(dst_sw)
+                return current_devices
+    else:
+        return calculate_path(devices, links_dict, src_sw, dst_sw)
+
+
+
+# A routing dict entry looks like this:
+# "00:00:00:00:00:02/None00:00:00:00:00:04/None":[
+#         "00:00:00:00:00:02/None",
+#         "of:0000000000000001",
+#         "of:0000000000000002",
+#         "00:00:00:00:00:04/None"
+#     ],
 
 def generate_routes(config):
-    intents_dict = onos_connect.onos_get(onos_connect.url_builder(
-        config["host"], config["port"], "/onos/v1/intents"), config["username"], config["password"])
+    devices_dict = onos_connect.onos_get(onos_connect.url_builder(
+        config["host"], config["port"], "/onos/v1/devices"), config["username"], config["password"])
     hosts_dict = onos_connect.onos_get(onos_connect.url_builder(
         config["host"], config["port"], "/onos/v1/hosts"), config["username"], config["password"])
+    links_dict = onos_connect.onos_get(onos_connect.url_builder(
+        config["host"], config["port"], "/onos/v1/links"), config["username"], config["password"])
+    intentStats_dict = onos_connect.onos_get(onos_connect.url_builder(
+        config["host"], config["port"], "/onos/v1/imr/imr/intentStats"), config["username"], config["password"])
+    monitoredIntents_dict = onos_connect.onos_get(onos_connect.url_builder(
+        config["host"], config["port"], "/onos/v1/imr/imr/monitoredIntents"), config["username"], config["password"])
+
     routing_dict = {}
 
-    # Build initial dict of routes
-    for intent in range(len(intents_dict["intents"])):
-        key = intents_dict["intents"][intent]["key"]
-        route = []
-        route.append(key[:22])
-        # 1 hop intents
-        if len(intents_dict["intents"][intent]["resources"]) == 0:
-            for onos_host in hosts_dict["hosts"]:
-                # Some hosts aren't listed in /v1/hosts.. try the reverse too
-                if onos_host["id"] == key[:22] or onos_host["id"] == key[22:]:
-                    if len(onos_host["locations"][0]["elementId"]) > 2:
-                        route.append(onos_host["locations"][0]["elementId"])
-                        break
-        # Multi-hop intents
-        else:
-            for resource in range(len(intents_dict["intents"][intent]["resources"])):
-                route.append(intents_dict["intents"][intent]["resources"][resource]["src"]["device"])
-                route.append(intents_dict["intents"][intent]["resources"][resource]["dst"]["device"])
-        route.append(key[22:])
-        route = list(dict.fromkeys(route))
-        routing_dict[key] = route
-    return routing_dict
+    intents_dict = intentStats_dict["statistics"][0]["intents"]
+    monitored_dict = monitoredIntents_dict["response"][0]["intents"]
+
+    for monitored_intent in monitored_dict:
+        print(monitored_intent["key"])
+        for intent in intents_dict:
+            if intent.get(monitored_intent["key"], "") != "":
+                key = monitored_intent.get("key")
+                route = []
+                route.append(monitored_intent["inElements"][0])
+                # one hop intents
+                if len(intent[monitored_intent["key"]]) == 1:
+                    route.append(intent[monitored_intent["key"]][0]["deviceId"])
+                
+                # multi hop intents
+                elif len(intent[monitored_intent["key"]]) > 1:
+                    src_sw = ""
+                    dst_sw = ""
+                    devices = []
+                    for i in range(len(intent[key])):
+                        for onos_host in hosts_dict["hosts"]:
+                            if onos_host["id"] == monitored_intent["inElements"][0] and len(onos_host["locations"][0]["elementId"]) > 2:
+                                src_sw = onos_host["locations"][0]["elementId"]
+                            elif onos_host["id"] == monitored_intent["outElements"][0] and len(onos_host["locations"][0]["elementId"]) > 2:
+                                dst_sw = onos_host["locations"][0]["elementId"]
+                        devices.append(intent[key][i]["deviceId"])
+                    
+                    devices.remove(src_sw)
+                    devices.remove(dst_sw)
+
+                    # 2 Hops
+                    if len(devices) == 0:
+                        route.append(src_sw)
+                        route.append(dst_sw)
+                    
+                    # 3 Hops
+                    elif len(devices) == 1:
+                        route.append(src_sw)
+                        route.append(devices[0])
+                        route.append(dst_sw)
+                    
+                    # 4 + Hops
+                    elif len(devices) > 1:
+                        route.append(src_sw)
+                        route = route + calculate_path(devices, links_dict, src_sw, dst_sw)
+
+                route.append(monitored_intent["outElements"][0])     
+                route = list(dict.fromkeys(route))
+                routing_dict[key] = route
+    
+    return routing_dict           
+
+
+
+            # if intent == monitored_intent["key"]:
+            #     print(intent)
+    # break
+    # # Build initial dict of routes
+    # for intent in range(len(intents_dict["intents"])):
+    #     key = intents_dict["intents"][intent]["key"]
+    #     route = []
+    #     route.append(key[:22])
+    #     # 1 hop intents
+    #     if len(intents_dict["intents"][intent]["resources"]) == 0:
+    #         for onos_host in hosts_dict["hosts"]:
+    #             # Some hosts aren't listed in /v1/hosts.. try the reverse too
+    #             if onos_host["id"] == key[:22] or onos_host["id"] == key[22:]:
+    #                 if len(onos_host["locations"][0]["elementId"]) > 2:
+    #                     route.append(onos_host["locations"][0]["elementId"])
+    #                     break
+    #     # Multi-hop intents
+    #     else:
+    #         for resource in range(len(intents_dict["intents"][intent]["resources"])):
+    #             route.append(intents_dict["intents"][intent]["resources"][resource]["src"]["device"])
+    #             route.append(intents_dict["intents"][intent]["resources"][resource]["dst"]["device"])
+    #     route.append(key[22:])
+    #     route = list(dict.fromkeys(route))
+    #     routing_dict[key] = route
+    # return routing_dict
 
 
 def generate_intents(routing_dict, config):

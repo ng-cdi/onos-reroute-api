@@ -1,6 +1,10 @@
-import base64, json, requests
+import base64
+import json
+import requests
 
 # Send JSON
+
+
 def post_json(url, reroute_JSON):
     try:
         r = requests.post(url, json=reroute_JSON)
@@ -10,9 +14,13 @@ def post_json(url, reroute_JSON):
         return
 
 # Load JSON from file
+
+
 def main():
     with open("intent.json", 'r') as f:
         reroute_JSON = json.load(f)
-        post_json('http://127.0.0.1:5000/api/push_intent', json.dumps(reroute_JSON))
+        post_json('http://127.0.0.1:5000/api/push_intent',
+                  json.dumps(reroute_JSON))
+
 
 main()
