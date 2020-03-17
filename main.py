@@ -16,7 +16,7 @@ logging.basicConfig(level=logging.INFO)
 app = Flask(__name__)
 
 config = Configs.get_config()
-layers =Configs.get_layers()
+layers = Configs.get_layers()
 
 @app.route('/api/push_intent', methods=['GET', 'POST'])
 def push_intent():

@@ -1,10 +1,12 @@
+import json
+
 class Configs:
 
     def __init__(self):
         self.__config = self.load_config("config.json", "config-default.json")
         self.__layers = self.load_config("layers.json")
 
-    def load_json(filename):
+    def load_json(self, filename):
         with open(filename) as f:
             return json.load(f)
 
