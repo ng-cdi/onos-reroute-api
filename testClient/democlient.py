@@ -38,7 +38,7 @@ def main():
         "Polling traffic data...  [ =    ]",
     ]
     i = 0
-    end_time = time.time() + 20
+    end_time = time.time() + 10
     while time.time() < end_time:
         print(bar[i % len(bar)], end="\r")
         time.sleep(.1)

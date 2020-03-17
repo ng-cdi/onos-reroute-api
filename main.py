@@ -9,25 +9,14 @@ import json
 import onos_connect
 import reroute
 import logging
+import Configs
 
 logging.basicConfig(level=logging.INFO)
 
 app = Flask(__name__)
 
-config = {}
-
-def load_json(filename):
-    with open(filename) as f:
-        return json.load(f)
-
-
-def load_config():
-    global config
-    try:
-        config = load_json("config.json")
-    except:
-        config = load_json("config-default.json")
-
+config = Configs.get_config()
+layers =Configs.get_layers()
 
 @app.route('/api/push_intent', methods=['GET', 'POST'])
 def push_intent():
