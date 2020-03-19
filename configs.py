@@ -1,4 +1,7 @@
 import json
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 class Configs:
 
@@ -12,9 +15,10 @@ class Configs:
 
     def load_config(self, config, default_config=None):
         try:
-            config = load_json(config)
+            config = self.load_json(config)
         except:
-            config = load_json(default_config)
+            logging.critical("Could not find configuration file: " + config)
+            config = self.load_json(default_config)
         return config
 
     def get_config(self):
