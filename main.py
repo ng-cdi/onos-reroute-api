@@ -39,6 +39,9 @@ def get_intents():
     routing_dict = reroute.generate_routes(confs.get_config())
     return jsonify(reroute.generate_intents(routing_dict, confs.get_config()))
 
+@app.route('/api/get_config', methods=['GET'])
+def get_intents():
+    return jsonify(confs.get_config())
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0')
