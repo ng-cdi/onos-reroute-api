@@ -1,6 +1,6 @@
-import json
+import json, traceback
 import onos_connect
-import logging, random
+import logging, random, sys
 
 logging.basicConfig(level=logging.INFO)
 
@@ -57,7 +57,7 @@ def generate_routes(config):
     monitored_dict = monitoredIntents_dict["response"][0]["intents"]
 
     for monitored_intent in monitored_dict:
-        print(monitored_intent["key"])
+        logging.info("Processing intent: " + monitored_intent["key"])
         for intent in intents_dict:
             if intent.get(monitored_intent["key"], "") != "":
                 key = monitored_intent.get("key")
@@ -82,27 +82,35 @@ def generate_routes(config):
                         devices.append(intent[key][i]["deviceId"])
                     
                     # Remove local and remote switches - see what's left
-                    devices.remove(src_sw)
-                    devices.remove(dst_sw)
-
-                    # 2 Hops
-                    if len(devices) == 0:
-                        route.append(src_sw)
-                        route.append(dst_sw)
-                    
-                    # 3 Hops
-                    elif len(devices) == 1:
-                        route.append(src_sw)
-                        route.append(devices[0])
-                        route.append(dst_sw)
-                    
-                    # 4 + Hops
-                    elif len(devices) > 1:
-                        route.append(src_sw)
-                        route = route + calculate_path(devices, links_dict, src_sw, dst_sw)
-                    
-                    else:
+                    try:
+                        devices.remove(src_sw)
+                        devices.remove(dst_sw)
+                    except:
+                        logging.warning("Could not remove " + src_sw + " or " + dst_sw + "from path  for " + key + ". Route will not be valid!")
+                        # traceback.print_exc(file=sys.stdout)
+                    try:
+                        # 2 Hops
+                        if len(devices) == 0:
+                            route.append(src_sw)
+                            route.append(dst_sw)
+                        
+                        # 3 Hops
+                        elif len(devices) == 1:
+                            route.append(src_sw)
+                            route.append(devices[0])
+                            route.append(dst_sw)
+                        
+                        # 4 + Hops
+                        elif len(devices) > 1:
+                            route.append(src_sw)
+                            route = route + calculate_path(devices, links_dict, src_sw, dst_sw)
+                        
+                        else:
+                            logging.warning("Could not calculate a route for " + key)
+                    except:
                         logging.warning("Could not calculate a route for " + key)
+                        # traceback.print_exc(file=sys.stdout)
+                        
 
                 route.append(monitored_intent["outElements"][0])     
                 route = list(dict.fromkeys(route))
@@ -198,11 +206,11 @@ def is_host_link(host, device, hosts_dict):
     return False
 
 
-def is_link(dev1, dev2, links_dict):
-    for link in links_dict["links"]:
-        if link["src"]["device"] == dev1 and link["dst"]["device"] == dev2:
-            return True
-    return False
+# def is_link(dev1, dev2, links_dict):
+#     for link in links_dict["links"]:
+#         if link["src"]["device"] == dev1 and link["dst"]["device"] == dev2:
+#             return True
+#     return False
 
 # Determine if the pushed intent is routable
 

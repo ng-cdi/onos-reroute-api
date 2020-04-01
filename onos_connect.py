@@ -1,7 +1,8 @@
 import base64
 import json
-import urllib.request
+import urllib.request, logging
 
+logging.basicConfig(level=logging.INFO)
 
 def auth_http(url, uname, passwd):
     request = urllib.request.Request(url)
@@ -26,4 +27,5 @@ def onos_post(url, uname, passwd, json_data):
 
 def url_builder(host, port, api):
     url = "http://" + host + ":" + port + api
+    logging.info("Parsed url: " + url)
     return url

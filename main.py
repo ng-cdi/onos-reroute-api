@@ -3,6 +3,7 @@ import requests
 import datetime
 import shutil
 import os
+import sys
 import glob
 import uuid
 import json
@@ -40,7 +41,7 @@ def get_intents():
     return jsonify(reroute.generate_intents(routing_dict, confs.get_config()))
 
 @app.route('/api/get_config', methods=['GET'])
-def get_intents():
+def get_config():
     return jsonify(confs.get_config())
 
 if __name__ == '__main__':
