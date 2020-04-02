@@ -140,66 +140,6 @@ class Reroute:
         return one_hop, two_hop
 
 
-        if intent.get(monitored_intent["key"], "") != "":
-                    key = monitored_intent.get("key")
-                    route = []
-                    route.append(monitored_intent["inElements"][0])
-                    # one hop intents
-                    if len(intent[monitored_intent["key"]]) == 1:
-                        route.append(intent[monitored_intent["key"]][0]["deviceId"])
-                    
-                    # multi hop intents
-                    # elif len(intent[monitored_intent["key"]]) > 1:
-                    else:
-                        src_sw = ""
-                        dst_sw = ""
-                        devices = []
-                        for i in range(len(intent[key])):
-                            for onos_host in hosts_dict.get("hosts"):
-                                if onos_host["id"] == monitored_intent["inElements"][0] and len(onos_host["locations"][0]["elementId"]) > 2:
-                                    src_sw = onos_host["locations"][0]["elementId"]
-                                elif onos_host["id"] == monitored_intent["outElements"][0] and len(onos_host["locations"][0]["elementId"]) > 2:
-                                    dst_sw = onos_host["locations"][0]["elementId"]
-                            devices.append(intent[key][i]["deviceId"])
-                        
-                        # Remove local and remote switches - see what's left
-                        try:
-                            devices.remove(src_sw)
-                            devices.remove(dst_sw)
-                        except:
-                            logging.warning("Could not remove " + src_sw + " or " + dst_sw + "from path  for " + key + ". Route will not be valid!")
-                            # traceback.print_exc(file=sys.stdout)
-                        try:
-                            # 2 Hops
-                            if len(devices) == 0:
-                                route.append(src_sw)
-                                route.append(dst_sw)
-                            
-                            # 3 Hops
-                            elif len(devices) == 1:
-                                route.append(src_sw)
-                                route.append(devices[0])
-                                route.append(dst_sw)
-                            
-                            # 4 + Hops
-                            elif len(devices) > 1:
-                                route.append(src_sw)
-                                route = route + self.__calculate_path(devices, links_dict, src_sw, dst_sw)
-                            
-                            else:
-                                logging.warning("Could not calculate a route for " + key)
-                        except:
-                            logging.warning("Could not calculate a route for " + key)
-                            # traceback.print_exc(file=sys.stdout)
-                            
-
-                    route.append(monitored_intent["outElements"][0])     
-                    route = list(dict.fromkeys(route))
-                    routing_dict[key] = route
-        
-        return
-
-
     def __is_route(self,route, key):
         hosts_dict = self.__onos.get_hosts()
         links_dict = self.__onos.get_links()
