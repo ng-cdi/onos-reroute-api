@@ -335,17 +335,21 @@ class Reroute:
             return False
         
         # Get list of devs in metro src_dev has links to 
+        metro_devs = []
         for device in layers.get("metro"):
+            if self.__is_link(src_dev, device, self.__onos.get_links()):
+                metro_devs.append(device)
         
+        # Dict of metro devs as keys mapped to array of core devs 
+        metro_core = {}
+        for metro_dev in metro_devs:
+            core_devs  = []
+            for core_dev in layers.get("core"):
+                if self.__is_link(metro_dev, core_dev, self.__onos.get_links()):
+                    core_devs.append(core_dev)
+            metro_core[metro_dev] = core_devs
         
-
-
-
-        
-
-
-        
-        if self.__calc_src_host(key) 
+        # Calculate route through core - no assumptions core can be 1 to ∞
 
         return
 
