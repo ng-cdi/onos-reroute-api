@@ -370,7 +370,9 @@ class Reroute:
             core_devs  = []
             for core_dev in layers.get("core"):
                 if self.__is_link(metro_dev, core_dev, self.__onos.get_links()):
-                    self.__core_dev_calc(dst_dev, core_dev, layers.get("core"))
+                    if core_dev != dst_dev:
+                        one_hop, two_hop = self.__core_dev_calc(dst_dev, core_dev, layers.get("core"))
+
                     core_devs.append(core_dev)
             metro_core[metro_dev] = core_devs
         
