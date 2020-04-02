@@ -115,6 +115,90 @@ class Reroute:
 
         return False
 
+    # TODO: This is a bodge for a max of 3 core devices 
+    # Needs to be fixed later. Infinate devs in core -- infinate loops. Needs good routing logic 
+    # Assume it is NOT the dst_dev
+    def __core_dev_calc(self, dst_dev, core_dev, core_devs):
+
+        one_hop = []
+        two_hop = []
+
+        # 1 hop - only 3 devs, will calc...probably
+        if self.__is_link(core_dev, dst_dev, self.__onos.get_links()):
+            one_hop.append(core_dev)
+            one_hop.append(dst_dev)
+
+        # 2 hops - should calc
+        core_devs.remove(core_dev)
+        core_devs.remove(dst_dev)
+
+        if self.__is_link(core_dev, core_devs[0], self.__onos.get_links()) and self.__is_link(core_devs[0], dst_dev, self.__onos.get_links()):
+            two_hop.append(core_dev)
+            two_hop.append(core_devs[0])
+            two_hop.append(dst_dev)
+        
+        return one_hop, two_hop
+
+
+        if intent.get(monitored_intent["key"], "") != "":
+                    key = monitored_intent.get("key")
+                    route = []
+                    route.append(monitored_intent["inElements"][0])
+                    # one hop intents
+                    if len(intent[monitored_intent["key"]]) == 1:
+                        route.append(intent[monitored_intent["key"]][0]["deviceId"])
+                    
+                    # multi hop intents
+                    # elif len(intent[monitored_intent["key"]]) > 1:
+                    else:
+                        src_sw = ""
+                        dst_sw = ""
+                        devices = []
+                        for i in range(len(intent[key])):
+                            for onos_host in hosts_dict.get("hosts"):
+                                if onos_host["id"] == monitored_intent["inElements"][0] and len(onos_host["locations"][0]["elementId"]) > 2:
+                                    src_sw = onos_host["locations"][0]["elementId"]
+                                elif onos_host["id"] == monitored_intent["outElements"][0] and len(onos_host["locations"][0]["elementId"]) > 2:
+                                    dst_sw = onos_host["locations"][0]["elementId"]
+                            devices.append(intent[key][i]["deviceId"])
+                        
+                        # Remove local and remote switches - see what's left
+                        try:
+                            devices.remove(src_sw)
+                            devices.remove(dst_sw)
+                        except:
+                            logging.warning("Could not remove " + src_sw + " or " + dst_sw + "from path  for " + key + ". Route will not be valid!")
+                            # traceback.print_exc(file=sys.stdout)
+                        try:
+                            # 2 Hops
+                            if len(devices) == 0:
+                                route.append(src_sw)
+                                route.append(dst_sw)
+                            
+                            # 3 Hops
+                            elif len(devices) == 1:
+                                route.append(src_sw)
+                                route.append(devices[0])
+                                route.append(dst_sw)
+                            
+                            # 4 + Hops
+                            elif len(devices) > 1:
+                                route.append(src_sw)
+                                route = route + self.__calculate_path(devices, links_dict, src_sw, dst_sw)
+                            
+                            else:
+                                logging.warning("Could not calculate a route for " + key)
+                        except:
+                            logging.warning("Could not calculate a route for " + key)
+                            # traceback.print_exc(file=sys.stdout)
+                            
+
+                    route.append(monitored_intent["outElements"][0])     
+                    route = list(dict.fromkeys(route))
+                    routing_dict[key] = route
+        
+        return
+
 
     def __is_route(self,route, key):
         hosts_dict = self.__onos.get_hosts()
@@ -346,11 +430,13 @@ class Reroute:
             core_devs  = []
             for core_dev in layers.get("core"):
                 if self.__is_link(metro_dev, core_dev, self.__onos.get_links()):
+                    self.__core_dev_calc(dst_dev, core_dev, layers.get("core"))
                     core_devs.append(core_dev)
             metro_core[metro_dev] = core_devs
         
         # Calculate route through core - no assumptions core can be 1 to ∞
-
+        
+                    
         return
 
 
