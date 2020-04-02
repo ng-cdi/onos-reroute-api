@@ -2,6 +2,7 @@ import json, traceback
 import logging, random, sys
 
 from onos_api import OnosAPI
+from configs import Configs
 
 logging.basicConfig(level=logging.INFO)
 
@@ -75,9 +76,21 @@ class Reroute:
             if onos_host["id"] == host:
                 for locations in onos_host["locations"]:
                     if locations["elementId"] == device:
-                        return True
+                        return device
 
         return False
+    
+    # Does the host exist and is it connected to a list of devices
+    def __is_host(self, host, devices):
+        hosts = self.__onos.get_hosts()
+        for device in devices:
+            if self.__is_host_link(host, device, hosts):
+                return device
+        
+        return False
+
+
+
 
 
     # def is_link(dev1, dev2, links_dict):
@@ -87,11 +100,15 @@ class Reroute:
     #     return False
 
     # Determine if the pushed intent is routable
+    def __calc_src_host(self, key):
+        return key[:22]
 
+    def __calc_dst_host(self, key):
+        return key[22:]
 
     def __is_key(self, key, new_intents):
-        src_host = key[:22]
-        dst_host = key[22:]
+        src_host = self.__calc_src_host(key)
+        dst_host = self.__calc_dst_host(key)
 
         if new_intents[key][0] == src_host and new_intents[key][-1] == dst_host:
             return True
@@ -284,10 +301,6 @@ class Reroute:
         # return routing_dict
 
 
-
-
-
-
     def generate_intents(self, routing_dict):
         imr_dict = self.__onos.get_intent_stats()
         intents_dict = {}
@@ -309,9 +322,31 @@ class Reroute:
             i = i + 1
         return intents_dict
 
+    def generate_host_to_host_routes(self, key):
+        layers = Configs("json/layers.json").get_config()
+
+        # THIS ASSUMES THE HOSTS ARE NOT MULTI HOMED!! Will just get first in list
+
+        src_dev = self.__is_host(self.__calc_src_host(key), layers.get("access"))
+        dst_dev = self.__is_host(self.__calc_dst_host(key), layers.get("core"))
+
+        # Check key exists and src is connected to access / dst is connected to core
+        if not src_dev and dst_dev:
+            return False
+        
+        # Get list of devs in metro src_dev has links to 
+        for device in layers.get("metro"):
+        
+        
 
 
-    def generate_host_to_host_intents(self, key):
+
+        
+
+
+        
+        if self.__calc_src_host(key) 
+
         return
 
 
