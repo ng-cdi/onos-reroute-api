@@ -1,16 +1,21 @@
 import json, traceback
-import onos_connect
 import logging, random, sys
 
 from onos_api import *
+from onos_connect import *
 
 logging.basicConfig(level=logging.INFO)
 
-# def __init__(self):
+    # A routing dict entry looks like this:
+    # "00:00:00:00:00:02/None00:00:00:00:00:04/None":[
+    #         "00:00:00:00:00:02/None",
+    #         "of:0000000000000001",
+    #         "of:0000000000000002",
+    #         "00:00:00:00:00:04/None"
+    #     ],
 
 class Reroute:
     def __init__(self):
-        self.__config = Config().get_config()
 
 
     def __is_link(self, dev1, dev2, links_dict):
@@ -38,17 +43,149 @@ class Reroute:
         else:
             return calculate_path(devices, links_dict, src_sw, dst_sw)
 
+    
+
+    def __host_exist(self, route):
+        onos.get_hosts() = onos_connect.onos_get(onos_connect.url_builder(
+            config["host"], config["port"], "/onos/v1/hosts"), config["username"], config["password"])
+        hosts_list = []
+        for onos_host in onos.get_hosts().get("hosts"):
+            hosts_list.append(onos_host["id"])
+
+        if route[1] in hosts_list and route[-1] in hosts_list:
+            return True
+
+        return False
 
 
-    # A routing dict entry looks like this:
-    # "00:00:00:00:00:02/None00:00:00:00:00:04/None":[
-    #         "00:00:00:00:00:02/None",
-    #         "of:0000000000000001",
-    #         "of:0000000000000002",
-    #         "00:00:00:00:00:04/None"
-    #     ],
+    def __devices_exist(self, route, devices_dict):
+        devices_list = []
+        for device in devices_dict["devices"]:
+            devices_list.append(device["id"])
 
-    def generate_routes():
+        for device in route:
+            if device not in devices_list:
+                logging.warning(device + ": Device not found")
+                return False
+
+        return True
+
+
+    def __is_host_link(self, host, device):
+        for onos_host in onos.get_hosts().get("hosts"):
+            if onos_host["id"] == host:
+                for locations in onos_host["locations"]:
+                    if locations["elementId"] == device:
+                        return True
+
+        return False
+
+
+    # def is_link(dev1, dev2, links_dict):
+    #     for link in links_dict["links"]:
+    #         if link["src"]["device"] == dev1 and link["dst"]["device"] == dev2:
+    #             return True
+    #     return False
+
+    # Determine if the pushed intent is routable
+
+
+    def __is_key(self, key, new_intents):
+        src_host = key[:22]
+        dst_host = key[22:]
+
+        if new_intents[key][0] == src_host and new_intents[key][-1] == dst_host:
+            return True
+
+        return False
+
+
+    def __is_route(self,route, key):
+        onos  = OnosAPI()
+        links_dict = onos_connect.onos_get(onos_connect.url_builder(
+            config["host"], config["port"], "/onos/v1/links"), config["username"], config["password"])
+        devices_dict = onos_connect.onos_get(onos_connect.url_builder(
+            config["host"], config["port"], "/onos/v1/devices"), config["username"], config["password"])
+
+        # check host connections
+        if not is_host_link(route[0], route[1], onos.get_hosts()):
+            logging.warning(
+                key + ": There is no link between the src host and src device")
+            return False
+
+        if not is_host_link(route[-1], route[-2], onos.get_hosts()):
+            logging.warning(
+                key + ": There is no link between the dst host and dst device")
+            return False
+
+        # remove hosts
+        link_list = route.copy()
+        del link_list[0]
+        del link_list[-1]
+        # Only one device, must be true - passed the hosts conn test
+        if len(link_list) < 2:
+            logging.info(key + ": Single-hop link exists")
+            return True
+
+        # Check devices exist
+        if not devices_exist(link_list, devices_dict):
+            logging.warning(key + ": Device not found")  
+            return False
+
+        dst_dev = link_list[-1]
+
+        for i in range(len(link_list)):
+            # Made it to the destination device
+            if link_list[i] == dst_dev:
+                logging.info(key + ": Multi-hop link exists")
+                return True
+
+            # Is there a link to the next device?
+            if not is_link(link_list[i], link_list[i + 1], links_dict):
+                logging.warning(key + ": No link between device " +
+                                link_list[i] + " and device " + link_list[i + 1])
+                return False
+
+        return False
+
+
+    def __is_intent(self, routing_dict, new_intents):
+        for key in list(dict.fromkeys(new_intents)):
+            # Too short for an intent
+            if len(new_intents[key]) < 3:
+                logging.warning(key + " is too short for an intent")
+                return False
+            if not is_key(key, new_intents):
+                logging.warning(key + " does not match the hosts provided: " +
+                                new_intents[key][0] + " and " + new_intents[key][-1])
+                return False
+            #  Does the key already exist?
+            if key not in list(dict.fromkeys(routing_dict)):
+                # Do the hosts exist?
+                logging.info(
+                    key + " does not already exist in current intents list")
+                if host_exist(new_intents[key]):
+                    # Is it a valid route?
+                    if is_route(new_intents[key], key):
+                        return True
+                    else:
+                        return False
+                else:
+                    logging.warning(key + " hosts do not exist on onos")
+                    return False
+            else:
+                # Is it a valid route?
+                logging.info(key + " exists in current intents list")
+                if is_route(new_intents[key], key):
+                    return True
+        return False
+
+
+    #################################################
+    # Public Methods 
+    #################################################
+
+    def generate_routes(self):
         devices_dict = onos_connect.onos_get(onos_connect.url_builder(
             config["host"], config["port"], "/onos/v1/devices"), config["username"], config["password"])
         onos.get_hosts() = onos_connect.onos_get(onos_connect.url_builder(
@@ -160,7 +297,7 @@ class Reroute:
 
 
 
-    def generate_intents(routing_dict):
+    def generate_intents(self, routing_dict):
         imr_dict = onos_connect.onos_get(onos_connect.url_builder(
             config["host"], config["port"], "/onos/v1/imr/imr/intentStats"), config["username"], config["password"])
         intents_dict = {}
@@ -183,142 +320,8 @@ class Reroute:
         return intents_dict
 
 
-    def host_exist(route):
-        onos.get_hosts() = onos_connect.onos_get(onos_connect.url_builder(
-            config["host"], config["port"], "/onos/v1/hosts"), config["username"], config["password"])
-        hosts_list = []
-        for onos_host in onos.get_hosts().get("hosts"):
-            hosts_list.append(onos_host["id"])
 
-        if route[1] in hosts_list and route[-1] in hosts_list:
-            return True
-
-        return False
-
-
-    def devices_exist(route, devices_dict):
-        devices_list = []
-        for device in devices_dict["devices"]:
-            devices_list.append(device["id"])
-
-        for device in route:
-            if device not in devices_list:
-                logging.warning(device + ": Device not found")
-                return False
-
-        return True
-
-
-    def is_host_link(host, device, onos.get_hosts()):
-        for onos_host in onos.get_hosts().get("hosts"):
-            if onos_host["id"] == host:
-                for locations in onos_host["locations"]:
-                    if locations["elementId"] == device:
-                        return True
-
-        return False
-
-
-    # def is_link(dev1, dev2, links_dict):
-    #     for link in links_dict["links"]:
-    #         if link["src"]["device"] == dev1 and link["dst"]["device"] == dev2:
-    #             return True
-    #     return False
-
-    # Determine if the pushed intent is routable
-
-
-    def is_key(key, new_intents):
-        src_host = key[:22]
-        dst_host = key[22:]
-
-        if new_intents[key][0] == src_host and new_intents[key][-1] == dst_host:
-            return True
-
-        return False
-
-
-    def is_route(route, key):
-        onos  = OnosAPI()
-        links_dict = onos_connect.onos_get(onos_connect.url_builder(
-            config["host"], config["port"], "/onos/v1/links"), config["username"], config["password"])
-        devices_dict = onos_connect.onos_get(onos_connect.url_builder(
-            config["host"], config["port"], "/onos/v1/devices"), config["username"], config["password"])
-
-        # check host connections
-        if not is_host_link(route[0], route[1], onos.get_hosts()):
-            logging.warning(
-                key + ": There is no link between the src host and src device")
-            return False
-
-        if not is_host_link(route[-1], route[-2], onos.get_hosts()):
-            logging.warning(
-                key + ": There is no link between the dst host and dst device")
-            return False
-
-        # remove hosts
-        link_list = route.copy()
-        del link_list[0]
-        del link_list[-1]
-        # Only one device, must be true - passed the hosts conn test
-        if len(link_list) < 2:
-            logging.info(key + ": Single-hop link exists")
-            return True
-
-        # Check devices exist
-        if not devices_exist(link_list, devices_dict):
-            logging.warning(key + ": Device not found")  
-            return False
-
-        dst_dev = link_list[-1]
-
-        for i in range(len(link_list)):
-            # Made it to the destination device
-            if link_list[i] == dst_dev:
-                logging.info(key + ": Multi-hop link exists")
-                return True
-
-            # Is there a link to the next device?
-            if not is_link(link_list[i], link_list[i + 1], links_dict):
-                logging.warning(key + ": No link between device " +
-                                link_list[i] + " and device " + link_list[i + 1])
-                return False
-
-        return False
-
-
-    def is_intent(routing_dict, new_intents):
-        for key in list(dict.fromkeys(new_intents)):
-            # Too short for an intent
-            if len(new_intents[key]) < 3:
-                logging.warning(key + " is too short for an intent")
-                return False
-            if not is_key(key, new_intents):
-                logging.warning(key + " does not match the hosts provided: " +
-                                new_intents[key][0] + " and " + new_intents[key][-1])
-                return False
-            #  Does the key already exist?
-            if key not in list(dict.fromkeys(routing_dict)):
-                # Do the hosts exist?
-                logging.info(
-                    key + " does not already exist in current intents list")
-                if host_exist(new_intents[key]):
-                    # Is it a valid route?
-                    if is_route(new_intents[key], key):
-                        return True
-                    else:
-                        return False
-                else:
-                    logging.warning(key + " hosts do not exist on onos")
-                    return False
-            else:
-                # Is it a valid route?
-                logging.info(key + " exists in current intents list")
-                if is_route(new_intents[key], key):
-                    return True
-        return False
-
-    def generate_host_to_host_intents(key):
+    def generate_host_to_host_intents(self, key):
         onos = OnosAPI()
 
 
