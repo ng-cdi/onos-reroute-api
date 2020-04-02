@@ -11,6 +11,7 @@ import reroute
 import logging
 from configs import Configs
 from onos_api import OnosConnect
+from  reroute import Reroute
 
 logging.basicConfig(level=logging.INFO)
 
@@ -23,7 +24,7 @@ app = Flask(__name__)
 def push_intent():
     new_intents = json.loads(request.json)
     print(new_intents)
-
+    reroute = Reroute()
     routing_dict = reroute.generate_routes()
 
     if (reroute.is_intent(routing_dict, new_intents)):
@@ -37,6 +38,7 @@ def push_intent():
 
 @app.route('/api/get_intents', methods=['GET'])
 def get_intents():
+    reroute = Reroute()
     routing_dict = reroute.generate_routes()
     return jsonify(reroute.generate_intents(routing_dict))
 

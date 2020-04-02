@@ -1,7 +1,6 @@
 import json, base64
 import logging
 import urllib.request, logging
-import onos_connect
 from configs import Configs
 
 

@@ -1,8 +1,7 @@
 import json, traceback
 import logging, random, sys
 
-from onos_api import *
-from onos_connect import *
+from onos_api import OnosAPI
 
 logging.basicConfig(level=logging.INFO)
 
@@ -16,6 +15,7 @@ logging.basicConfig(level=logging.INFO)
 
 class Reroute:
     def __init__(self):
+        self.__onos = OnosAPI()
 
 
     def __is_link(self, dev1, dev2, links_dict):
@@ -28,28 +28,27 @@ class Reroute:
         current_devices = []
         shuffle_devices = devices.copy()
         random.shuffle(shuffle_devices)
-        if is_link(src_sw, shuffle_devices[0], links_dict):
+        if self.__is_link(src_sw, shuffle_devices[0], links_dict):
             current_devices.append(shuffle_devices[0])
             while True:
-                if is_link(shuffle_devices[0], shuffle_devices[1], links_dict):
+                if self.__is_link(shuffle_devices[0], shuffle_devices[1], links_dict):
                     shuffle_devices.remove(shuffle_devices[0])
                     current_devices.append(shuffle_devices[0])
                 else:
-                    return calculate_path(devices, links_dict, src_sw, dst_sw)
-                if len(shuffle_devices) == 1 and is_link(shuffle_devices[0], dst_sw, links_dict):
+                    return self.__calculate_path(devices, links_dict, src_sw, dst_sw)
+                if len(shuffle_devices) == 1 and self.__is_link(shuffle_devices[0], dst_sw, links_dict):
                     current_devices.append(shuffle_devices[0])
                     current_devices.append(dst_sw)
                     return current_devices
         else:
-            return calculate_path(devices, links_dict, src_sw, dst_sw)
+            return self.__calculate_path(devices, links_dict, src_sw, dst_sw)
 
     
 
     def __host_exist(self, route):
-        onos.get_hosts() = onos_connect.onos_get(onos_connect.url_builder(
-            config["host"], config["port"], "/onos/v1/hosts"), config["username"], config["password"])
+        hosts_dict = self.__onos.get_hosts()
         hosts_list = []
-        for onos_host in onos.get_hosts().get("hosts"):
+        for onos_host in hosts_dict.get("hosts"):
             hosts_list.append(onos_host["id"])
 
         if route[1] in hosts_list and route[-1] in hosts_list:
@@ -71,8 +70,8 @@ class Reroute:
         return True
 
 
-    def __is_host_link(self, host, device):
-        for onos_host in onos.get_hosts().get("hosts"):
+    def __is_host_link(self, host, device, hosts_dict):
+        for onos_host in hosts_dict.get("hosts"):
             if onos_host["id"] == host:
                 for locations in onos_host["locations"]:
                     if locations["elementId"] == device:
@@ -101,19 +100,17 @@ class Reroute:
 
 
     def __is_route(self,route, key):
-        onos  = OnosAPI()
-        links_dict = onos_connect.onos_get(onos_connect.url_builder(
-            config["host"], config["port"], "/onos/v1/links"), config["username"], config["password"])
-        devices_dict = onos_connect.onos_get(onos_connect.url_builder(
-            config["host"], config["port"], "/onos/v1/devices"), config["username"], config["password"])
+        hosts_dict = self.__onos.get_hosts()
+        links_dict = self.__onos.get_links()
+        devices_dict = self.__onos.get_devices()
 
         # check host connections
-        if not is_host_link(route[0], route[1], onos.get_hosts()):
+        if not self.__is_host_link(route[0], route[1], hosts_dict):
             logging.warning(
                 key + ": There is no link between the src host and src device")
             return False
 
-        if not is_host_link(route[-1], route[-2], onos.get_hosts()):
+        if not self.__is_host_link(route[-1], route[-2], hosts_dict):
             logging.warning(
                 key + ": There is no link between the dst host and dst device")
             return False
@@ -128,7 +125,7 @@ class Reroute:
             return True
 
         # Check devices exist
-        if not devices_exist(link_list, devices_dict):
+        if not self.__devices_exist(link_list, devices_dict):
             logging.warning(key + ": Device not found")  
             return False
 
@@ -141,7 +138,7 @@ class Reroute:
                 return True
 
             # Is there a link to the next device?
-            if not is_link(link_list[i], link_list[i + 1], links_dict):
+            if not self.__is_link(link_list[i], link_list[i + 1], links_dict):
                 logging.warning(key + ": No link between device " +
                                 link_list[i] + " and device " + link_list[i + 1])
                 return False
@@ -149,13 +146,17 @@ class Reroute:
         return False
 
 
-    def __is_intent(self, routing_dict, new_intents):
+    #################################################
+    # Public Methods 
+    #################################################
+
+    def is_intent(self, routing_dict, new_intents):
         for key in list(dict.fromkeys(new_intents)):
             # Too short for an intent
             if len(new_intents[key]) < 3:
                 logging.warning(key + " is too short for an intent")
                 return False
-            if not is_key(key, new_intents):
+            if not self.__is_key(key, new_intents):
                 logging.warning(key + " does not match the hosts provided: " +
                                 new_intents[key][0] + " and " + new_intents[key][-1])
                 return False
@@ -164,9 +165,9 @@ class Reroute:
                 # Do the hosts exist?
                 logging.info(
                     key + " does not already exist in current intents list")
-                if host_exist(new_intents[key]):
+                if self.__host_exist(new_intents[key]):
                     # Is it a valid route?
-                    if is_route(new_intents[key], key):
+                    if self.__is_route(new_intents[key], key):
                         return True
                     else:
                         return False
@@ -176,26 +177,16 @@ class Reroute:
             else:
                 # Is it a valid route?
                 logging.info(key + " exists in current intents list")
-                if is_route(new_intents[key], key):
+                if self.__is_route(new_intents[key], key):
                     return True
         return False
 
-
-    #################################################
-    # Public Methods 
-    #################################################
-
     def generate_routes(self):
-        devices_dict = onos_connect.onos_get(onos_connect.url_builder(
-            config["host"], config["port"], "/onos/v1/devices"), config["username"], config["password"])
-        onos.get_hosts() = onos_connect.onos_get(onos_connect.url_builder(
-            config["host"], config["port"], "/onos/v1/hosts"), config["username"], config["password"])
-        links_dict = onos_connect.onos_get(onos_connect.url_builder(
-            config["host"], config["port"], "/onos/v1/links"), config["username"], config["password"])
-        intentStats_dict = onos_connect.onos_get(onos_connect.url_builder(
-            config["host"], config["port"], "/onos/v1/imr/imr/intentStats"), config["username"], config["password"])
-        monitoredIntents_dict = onos_connect.onos_get(onos_connect.url_builder(
-            config["host"], config["port"], "/onos/v1/imr/imr/monitoredIntents"), config["username"], config["password"])
+        hosts_dict            = self.__onos.get_hosts()
+        links_dict            = self.__onos.get_links()
+        # devices_dict          = self.__onos.get_devices()
+        intentStats_dict      = self.__onos.get_intent_stats()
+        monitoredIntents_dict = self.__onos.get_monitored_intents()
 
         routing_dict = {}
 
@@ -220,7 +211,7 @@ class Reroute:
                         dst_sw = ""
                         devices = []
                         for i in range(len(intent[key])):
-                            for onos_host in onos.get_hosts().get("hosts"):
+                            for onos_host in hosts_dict.get("hosts"):
                                 if onos_host["id"] == monitored_intent["inElements"][0] and len(onos_host["locations"][0]["elementId"]) > 2:
                                     src_sw = onos_host["locations"][0]["elementId"]
                                 elif onos_host["id"] == monitored_intent["outElements"][0] and len(onos_host["locations"][0]["elementId"]) > 2:
@@ -249,7 +240,7 @@ class Reroute:
                             # 4 + Hops
                             elif len(devices) > 1:
                                 route.append(src_sw)
-                                route = route + calculate_path(devices, links_dict, src_sw, dst_sw)
+                                route = route + self.__calculate_path(devices, links_dict, src_sw, dst_sw)
                             
                             else:
                                 logging.warning("Could not calculate a route for " + key)
@@ -276,7 +267,7 @@ class Reroute:
         #     route.append(key[:22])
         #     # 1 hop intents
         #     if len(intents_dict["intents"][intent]["resources"]) == 0:
-        #         for onos_host in onos.get_hosts()["hosts"]:
+        #         for onos_host in hosts_dict["hosts"]:
         #             # Some hosts aren't listed in /v1/hosts.. try the reverse too
         #             if onos_host["id"] == key[:22] or onos_host["id"] == key[22:]:
         #                 if len(onos_host["locations"][0]["elementId"]) > 2:
@@ -298,8 +289,7 @@ class Reroute:
 
 
     def generate_intents(self, routing_dict):
-        imr_dict = onos_connect.onos_get(onos_connect.url_builder(
-            config["host"], config["port"], "/onos/v1/imr/imr/intentStats"), config["username"], config["password"])
+        imr_dict = self.__onos.get_intent_stats()
         intents_dict = {}
         intents_dict["routingList"] = []
         i = 0
@@ -322,7 +312,7 @@ class Reroute:
 
 
     def generate_host_to_host_intents(self, key):
-        onos = OnosAPI()
+        return
 
 
         
