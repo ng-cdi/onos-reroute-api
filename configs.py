@@ -5,9 +5,8 @@ logging.basicConfig(level=logging.INFO)
 
 class Configs:
 
-    def __init__(self):
-        self.__config = self.load_config("json/config.json", "config-default.json")
-        self.__layers = self.load_config("json/layers.json")
+    def __init__(self, config, default_config=None):
+        self.__config = self.load_config(config, default_config)
 
     def load_json(self, filename):
         with open(filename) as f:
@@ -23,6 +22,3 @@ class Configs:
 
     def get_config(self):
         return self.__config
-    
-    def get_layers(self):
-        return self.__layers

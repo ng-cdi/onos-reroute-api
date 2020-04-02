@@ -44,7 +44,7 @@ def get_intents():
 
 @app.route('/api/get_config', methods=['GET'])
 def get_config():
-    return jsonify(Configs().get_config())
+    return jsonify(Configs("json/config.json", "config-default.json").get_config())
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0')

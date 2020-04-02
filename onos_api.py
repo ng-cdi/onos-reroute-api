@@ -41,7 +41,7 @@ class OnosAPI:
 class OnosConnect:
 
     def __init__(self, api):
-        self.__config = Configs().get_config()
+        self.__config = Configs("json/config.json", "config-default.json").get_config()
         self.__url = self.url_builder(api)
         
     def auth_http(self):
