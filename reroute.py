@@ -119,19 +119,20 @@ class Reroute:
     # {
     #   "num_paths": 1,
     #   "core_dev": "of:000000000000000c",
-    #    0: ["of:000000000000000c]
+    #    0: ["00:00:00:00:00:01/None", "of:0000000000000001", "of:0000000000000007", "of:000000000000000c", "00:00:00:00:00:07/None"]
     # }
+
     # {
     #   "num_paths": 2,
     #   "core_dev": "of:000000000000000c",
-    #    0: ["of:000000000000000c, "of:000000000000000d"]
-    #    1: ["of:000000000000000c, "of:000000000000000e", "of:000000000000000d"]
+    #    0: ["00:00:00:00:00:01/None", "of:0000000000000001", "of:0000000000000007", "of:000000000000000c, "of:000000000000000d", "00:00:00:00:00:07/None"]
+    #    1: ["00:00:00:00:00:01/None", "of:0000000000000001", "of:0000000000000007", "of:000000000000000c, "of:000000000000000e", "of:000000000000000d", "00:00:00:00:00:07/None"]
     # }
 
     # TODO: This is a bodge for a max of 3 core devices 
     # Needs to be fixed later. Infinate devs in core -- infinate loops. Needs good routing logic 
     # Assume it is NOT the dst_dev
-    def __core_dev_calc(self, dst_dev, core_dev, core_devs):
+    def __core_dev_calc(self, key, src_dev, metro_dev, dst_dev, core_dev, core_devs):
 
         one_hop = []
         two_hop = []
@@ -143,7 +144,11 @@ class Reroute:
         if core_dev == dst_dev:
             clac_routes["num_paths"] = 1
             calc_list = []
+            calc_list.append(self.__calc_src_host(key))
+            calc_list.append(src_dev)
+            calc_list.append(metro_dev)
             calc_list.append(dst_dev)
+            calc_list.append(self.__calc_dst_host(key))
             calc_routes[0] = calc_list
             return calc_routes
 
@@ -151,8 +156,12 @@ class Reroute:
         if self.__is_link(core_dev, dst_dev, self.__onos.get_links()):
             clac_routes["num_paths"] = clac_routes["num_paths"] + 1
             calc_list = []
+            calc_list.append(self.__calc_src_host(key))
+            calc_list.append(src_dev)
+            calc_list.append(metro_dev)
             calc_list.append(core_dev)
             calc_list.append(dst_dev)
+            calc_list.append(self.__calc_dst_host(key))
             calc_routes[0] = calc_list
 
         # 2 hops - should calc
@@ -162,9 +171,13 @@ class Reroute:
         if self.__is_link(core_dev, core_devs[0], self.__onos.get_links()) and self.__is_link(core_devs[0], dst_dev, self.__onos.get_links()):
             clac_routes["num_paths"] = clac_routes["num_paths"] + 1
             calc_list = []
+            calc_list.append(self.__calc_src_host(key))
+            calc_list.append(src_dev)
+            calc_list.append(metro_dev)
             calc_list.append(core_dev)
             calc_list.append(core_devs[0])
             calc_list.append(dst_dev)
+            calc_list.append(self.__calc_dst_host(key))
             calc_routes[1] = calc_list
         
         return clac_routes
@@ -405,13 +418,13 @@ class Reroute:
         #   {
         #       "num_paths": 1,
         #       "core_dev": "of:000000000000000c",
-        #       0: ["of:000000000000000c]
+        #           0: ["00:00:00:00:00:01/None", "of:0000000000000001", "of:0000000000000007", "of:000000000000000c", "00:00:00:00:00:07/None"]
         #   },
         #   {
         #       "num_paths": 2,
         #       "core_dev": "of:000000000000000d",
-        #        0: ["of:000000000000000d, "of:000000000000000c"]
-        #        1: ["of:000000000000000d, "of:000000000000000e", "of:000000000000000c"]
+        #           0: ["00:00:00:00:00:01/None", "of:0000000000000001", "of:0000000000000007", "of:000000000000000c, "of:000000000000000d", "00:00:00:00:00:07/None"]
+        #           1: ["00:00:00:00:00:01/None", "of:0000000000000001", "of:0000000000000007", "of:000000000000000c, "of:000000000000000e", "of:000000000000000d", "00:00:00:00:00:07/None"]
         #   }
         # ]
 
@@ -421,7 +434,7 @@ class Reroute:
             for core_dev in layers.get("core"):
                 # Calculate route through core - no assumptions core can be 1 to ∞
                 if self.__is_link(metro_dev, core_dev, self.__onos.get_links()):
-                    core_devs.append(self.__core_dev_calc(dst_dev, core_dev, layers.get("core")))
+                    core_devs.append(self.__core_dev_calc(key, src_dev, metro_dev, dst_dev, core_dev, layers.get("core")))
             # Check it's managed to make a route - die if not
             if len(core_devs) == 0:
                 return False
@@ -445,12 +458,39 @@ class Reroute:
         #     "00:00:00:00:00:07/None"
         # ] etctectect....
 
-        num_routes = 0
+        routes = {}
+        routes["key"] = key
+        routes["num_routes"] = 0
+
+        # def parse_routes(route_priority):
+        #     for metro_dev in metro_devs:
+        #         for core_route in metro_core[metro_dev]:
+        #             if core_route["num_paths"] == 1:
+        #                 routes[routes.get("num_routes")] = core_route.get(0)
+        #                 routes["num_routes"] += 1
+
+        # Top Priority routes
         for metro_dev in metro_devs:
+            for core_route in metro_core[metro_dev]:
+                if core_route["num_paths"] == 1:
+                    routes[routes.get("num_routes")] = core_route.get(0)
+                    routes["num_routes"] += 1
+        
+        # Medium Priority Routes
+        for metro_dev in metro_devs:
+            for core_route in metro_core[metro_dev]:
+                if core_route["num_paths"] == 2:
+                    routes[routes.get("num_routes")] = core_route.get(0)
+                    routes["num_routes"] += 1
+        
+        # Low Priority Routes
+        for metro_dev in metro_devs:
+            for core_route in metro_core[metro_dev]:
+                if core_route["num_paths"] == 2:
+                    routes[routes.get("num_routes")] = core_route.get(1)
+                    routes["num_routes"] += 1
 
-
-
-        return
+        return routes
 
 
         
