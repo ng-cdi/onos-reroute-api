@@ -115,6 +115,19 @@ class Reroute:
 
         return False
 
+    # Example Syntax for __core_dev_calc
+    # {
+    #   "num_paths": 1,
+    #   "core_dev": "of:000000000000000c",
+    #    0: ["of:000000000000000c]
+    # }
+    # {
+    #   "num_paths": 2,
+    #   "core_dev": "of:000000000000000c",
+    #    0: ["of:000000000000000c, "of:000000000000000d"]
+    #    1: ["of:000000000000000c, "of:000000000000000e", "of:000000000000000d"]
+    # }
+
     # TODO: This is a bodge for a max of 3 core devices 
     # Needs to be fixed later. Infinate devs in core -- infinate loops. Needs good routing logic 
     # Assume it is NOT the dst_dev
@@ -122,22 +135,39 @@ class Reroute:
 
         one_hop = []
         two_hop = []
+        calc_routes =  {}
+        clac_routes["num_paths"] = 0
+        clac_routes["core_dev"] = core_dev
+
+        # it is the dst dev
+        if core_dev == dst_dev:
+            clac_routes["num_paths"] = 1
+            calc_list = []
+            calc_list.append(dst_dev)
+            calc_routes[0] = calc_list
+            return calc_routes
 
         # 1 hop - only 3 devs, will calc...probably
         if self.__is_link(core_dev, dst_dev, self.__onos.get_links()):
-            one_hop.append(core_dev)
-            one_hop.append(dst_dev)
+            clac_routes["num_paths"] = clac_routes["num_paths"] + 1
+            calc_list = []
+            calc_list.append(core_dev)
+            calc_list.append(dst_dev)
+            calc_routes[0] = calc_list
 
         # 2 hops - should calc
         core_devs.remove(core_dev)
         core_devs.remove(dst_dev)
 
         if self.__is_link(core_dev, core_devs[0], self.__onos.get_links()) and self.__is_link(core_devs[0], dst_dev, self.__onos.get_links()):
-            two_hop.append(core_dev)
-            two_hop.append(core_devs[0])
-            two_hop.append(dst_dev)
+            clac_routes["num_paths"] = clac_routes["num_paths"] + 1
+            calc_list = []
+            calc_list.append(core_dev)
+            calc_list.append(core_devs[0])
+            calc_list.append(dst_dev)
+            calc_routes[1] = calc_list
         
-        return one_hop, two_hop
+        return clac_routes
 
 
     def __is_route(self,route, key):
@@ -364,21 +394,62 @@ class Reroute:
             if self.__is_link(src_dev, device, self.__onos.get_links()):
                 metro_devs.append(device)
         
+        if len(metro_devs) == 0:
+            return False
+        
         # Dict of metro devs as keys mapped to array of core devs 
+
+
+        # Dict Example
+        # "of:0000000000000008":[
+        #   {
+        #       "num_paths": 1,
+        #       "core_dev": "of:000000000000000c",
+        #       0: ["of:000000000000000c]
+        #   },
+        #   {
+        #       "num_paths": 2,
+        #       "core_dev": "of:000000000000000d",
+        #        0: ["of:000000000000000d, "of:000000000000000c"]
+        #        1: ["of:000000000000000d, "of:000000000000000e", "of:000000000000000c"]
+        #   }
+        # ]
+
         metro_core = {}
         for metro_dev in metro_devs:
             core_devs  = []
             for core_dev in layers.get("core"):
+                # Calculate route through core - no assumptions core can be 1 to ∞
                 if self.__is_link(metro_dev, core_dev, self.__onos.get_links()):
-                    if core_dev != dst_dev:
-                        one_hop, two_hop = self.__core_dev_calc(dst_dev, core_dev, layers.get("core"))
-
-                    core_devs.append(core_dev)
+                    core_devs.append(self.__core_dev_calc(dst_dev, core_dev, layers.get("core")))
+            # Check it's managed to make a route - die if not
+            if len(core_devs) == 0:
+                return False
             metro_core[metro_dev] = core_devs
         
-        # Calculate route through core - no assumptions core can be 1 to ∞
-        
-                    
+        # Dict example for export
+        # "key" : "00:00:00:00:00:01/None00:00:00:00:00:07/None",
+        # "num_routes" : 2
+        # 0:[
+        #     "00:00:00:00:00:01/None",
+        #     "of:0000000000000001",
+        #     "of:0000000000000007",
+        #     "of:000000000000000c",
+        #     "00:00:00:00:00:07/None"
+        # ],
+        # 1:[
+        #     "00:00:00:00:00:01/None",
+        #     "of:0000000000000001",
+        #     "of:0000000000000007",
+        #     "of:000000000000000c",
+        #     "00:00:00:00:00:07/None"
+        # ] etctectect....
+
+        num_routes = 0
+        for metro_dev in metro_devs:
+
+
+
         return
 
 
