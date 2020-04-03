@@ -31,7 +31,7 @@ Example of a valid route request:
 }
 ```
 
-Example of a response:
+Example of a response, routes are listed from lowest hops to highest:
 ```json
 {
    "0":[
