@@ -1,4 +1,4 @@
-import json, traceback
+import json, traceback, copy
 import logging, random, sys
 
 from onos_api import OnosAPI
@@ -397,6 +397,7 @@ class Reroute:
 
         # Check key exists and src is connected to access / dst is connected to core
         if not src_dev and dst_dev:
+            logging.warning("Key '" + key + "' does not exist")
             return False
         
         # Get list of devs in metro src_dev has links to 
@@ -406,8 +407,10 @@ class Reroute:
                 metro_devs.append(device)
         
         if len(metro_devs) == 0:
+            logging.warning("Could not find any metro devices for key '" + key + "'")
             return False
         
+
         # Dict of metro devs as keys mapped to array of core devs 
 
 
@@ -428,16 +431,18 @@ class Reroute:
 
         metro_core = {}
         for metro_dev in metro_devs:
+            print(metro_dev)
             core_devs  = []
             for core_dev in layers.get("core"):
+                print(core_dev)
                 # Calculate route through core - no assumptions core can be 1 to ∞
                 if self.__is_link(metro_dev, core_dev, self.__onos.get_links()):
-                    core_devs.append(self.__core_dev_calc(key, src_dev, metro_dev, dst_dev, core_dev, layers.get("core")))
-            # Check it's managed to make a route - die if not
-            if len(core_devs) == 0:
-                return False
+                    print("hitt")
+                    core_devs.append(self.__core_dev_calc(key, src_dev, metro_dev, dst_dev, core_dev, copy.copy(layers.get("core"))))
+            
             metro_core[metro_dev] = core_devs
         
+
         # Dict example for export
         # "key" : "00:00:00:00:00:01/None00:00:00:00:00:07/None",
         # "num_routes" : 2

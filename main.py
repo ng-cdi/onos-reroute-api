@@ -44,8 +44,8 @@ def get_intents():
 @app.route('/api/get_routes', methods=['GET', 'POST'])
 def get_routes():
     key = json.loads(request.json)
-    key = {}
-    key["key"] = "00:00:00:00:00:01/None00:00:00:00:00:07/None"
+    # key = {}
+    # key["key"] = "00:00:00:00:00:01/None00:00:00:00:00:07/None"
     reroute = Reroute()
     routes = reroute.generate_host_to_host_routes(key.get("key"))
     return jsonify(routes)
