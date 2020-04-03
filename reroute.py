@@ -134,15 +134,13 @@ class Reroute:
     # Assume it is NOT the dst_dev
     def __core_dev_calc(self, key, src_dev, metro_dev, dst_dev, core_dev, core_devs):
 
-        one_hop = []
-        two_hop = []
-        calc_routes =  {}
-        clac_routes["num_paths"] = 0
-        clac_routes["core_dev"] = core_dev
+        calc_routes = {}
+        calc_routes["num_paths"] = 0
+        calc_routes["core_dev"] = core_dev
 
         # it is the dst dev
         if core_dev == dst_dev:
-            clac_routes["num_paths"] = 1
+            calc_routes["num_paths"] = 1
             calc_list = []
             calc_list.append(self.__calc_src_host(key))
             calc_list.append(src_dev)
@@ -154,7 +152,7 @@ class Reroute:
 
         # 1 hop - only 3 devs, will calc...probably
         if self.__is_link(core_dev, dst_dev, self.__onos.get_links()):
-            clac_routes["num_paths"] = clac_routes["num_paths"] + 1
+            calc_routes["num_paths"] += 1
             calc_list = []
             calc_list.append(self.__calc_src_host(key))
             calc_list.append(src_dev)
@@ -169,7 +167,7 @@ class Reroute:
         core_devs.remove(dst_dev)
 
         if self.__is_link(core_dev, core_devs[0], self.__onos.get_links()) and self.__is_link(core_devs[0], dst_dev, self.__onos.get_links()):
-            clac_routes["num_paths"] = clac_routes["num_paths"] + 1
+            calc_routes["num_paths"] += 1
             calc_list = []
             calc_list.append(self.__calc_src_host(key))
             calc_list.append(src_dev)
@@ -180,7 +178,7 @@ class Reroute:
             calc_list.append(self.__calc_dst_host(key))
             calc_routes[1] = calc_list
         
-        return clac_routes
+        return calc_routes
 
 
     def __is_route(self,route, key):
@@ -460,7 +458,7 @@ class Reroute:
 
         routes = {}
         routes["key"] = key
-        routes["num_routes"] = 0
+        routes["num_routes"] = "0"
 
         # def parse_routes(route_priority):
         #     for metro_dev in metro_devs:
@@ -469,26 +467,28 @@ class Reroute:
         #                 routes[routes.get("num_routes")] = core_route.get(0)
         #                 routes["num_routes"] += 1
 
+        # Tidy this up a bit later
+
         # Top Priority routes
         for metro_dev in metro_devs:
             for core_route in metro_core[metro_dev]:
                 if core_route["num_paths"] == 1:
                     routes[routes.get("num_routes")] = core_route.get(0)
-                    routes["num_routes"] += 1
+                    routes["num_routes"] = str(int(routes["num_routes"]) + 1)
         
         # Medium Priority Routes
         for metro_dev in metro_devs:
             for core_route in metro_core[metro_dev]:
                 if core_route["num_paths"] == 2:
                     routes[routes.get("num_routes")] = core_route.get(0)
-                    routes["num_routes"] += 1
+                    routes["num_routes"] = str(int(routes["num_routes"]) + 1)
         
         # Low Priority Routes
         for metro_dev in metro_devs:
             for core_route in metro_core[metro_dev]:
                 if core_route["num_paths"] == 2:
                     routes[routes.get("num_routes")] = core_route.get(1)
-                    routes["num_routes"] += 1
+                    routes["num_routes"] = str(int(routes["num_routes"]) + 1)
 
         return routes
 

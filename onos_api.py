@@ -9,11 +9,11 @@ logging.basicConfig(level=logging.INFO)
 class OnosAPI:
 
     def __init__(self):
-        self.__devices 
-        self.__hosts
-        self.__links 
-        self.__intent_stats 
-        self.__monitored_intents 
+        self.__devices = {}
+        self.__hosts = {}
+        self.__links = {}
+        self.__intent_stats = {}
+        self.__monitored_intents = {}
         self.load_json()
         
     def load_json(self):
