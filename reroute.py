@@ -431,13 +431,10 @@ class Reroute:
 
         metro_core = {}
         for metro_dev in metro_devs:
-            print(metro_dev)
             core_devs  = []
             for core_dev in layers.get("core"):
-                print(core_dev)
                 # Calculate route through core - no assumptions core can be 1 to ∞
                 if self.__is_link(metro_dev, core_dev, self.__onos.get_links()):
-                    print("hitt")
                     core_devs.append(self.__core_dev_calc(key, src_dev, metro_dev, dst_dev, core_dev, copy.copy(layers.get("core"))))
             
             metro_core[metro_dev] = core_devs
