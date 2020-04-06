@@ -21,8 +21,11 @@ app = Flask(__name__)
 
 @app.route('/api/push_intent', methods=['GET', 'POST'])
 def push_intent():
-    new_intents = json.loads(request.json)
-    print(new_intents)
+    try:
+        new_intents = json.loads(request.json)
+    except:
+        return "400: Could not parse json provided", 400
+
     reroute = Reroute()
     routing_dict = reroute.generate_routes()
 
@@ -32,7 +35,7 @@ def push_intent():
         logging.info(OnosConnect("/onos/v1/imr/imr/reRouteIntents").post(reroute.generate_intents(routing_dict)))
         return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
     else:
-        return json.dumps({'unsuccesful': False}), 406, {'ContentType': 'application/json'}
+        return json.dumps({'success': False}), 406, {'ContentType': 'application/json'}
 
 
 @app.route('/api/get_intents', methods=['GET'])
@@ -43,7 +46,10 @@ def get_intents():
 
 @app.route('/api/get_routes', methods=['GET', 'POST'])
 def get_routes():
-    key = json.loads(request.json)
+    try:
+        key = json.loads(request.json)
+    except:
+        return "400: Could not parse json provided", 400
     # key = {}
     # key["key"] = "00:00:00:00:00:01/None00:00:00:00:00:07/None"
     reroute = Reroute()
