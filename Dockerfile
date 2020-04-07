@@ -4,7 +4,8 @@ FROM python:3.6-stretch
 WORKDIR /reroute
 
 RUN pip3 install Flask \
-  requests 
+  requests \
+  python-dateutil
 
 COPY . /reroute
 

@@ -21,7 +21,7 @@ def main():
     with open("test_key.json", 'r') as f:
         reroute_JSON = json.load(f)
         print(reroute_JSON)
-        post_json('http://api-demo.ng-cdi.com/api/get_routes', json.dumps(reroute_JSON))
+        post_json('http://127.0.0.1:5000/api/get_routes', json.dumps(reroute_JSON))
 
 
 main()
