@@ -4,6 +4,55 @@
 
 Retrieving all installed intents: ```/api/get_intents```
 
+Example of (just two for briefness) an intent:
+```json
+{
+  "routingList": [
+    {
+      "appId": {
+        "id": 187,
+        "name": "org.onosproject.ifwd"
+      },
+      "key": "00:00:00:00:00:01/None00:00:00:00:00:04/None",
+      "paths": [
+        {
+          "path": [
+            "00:00:00:00:00:01/None",
+            "of:0000000000000001",
+            "of:0000000000000008",
+            "of:000000000000000c",
+            "of:000000000000000a",
+            "of:0000000000000004",
+            "00:00:00:00:00:04/None"
+          ],
+          "weight": 1
+        }
+      ]
+    },
+    {
+      "appId": {
+        "id": 187,
+        "name": "org.onosproject.ifwd"
+      },
+      "key": "00:00:00:00:00:05/None00:00:00:00:00:07/None",
+      "paths": [
+        {
+          "path": [
+            "00:00:00:00:00:05/None",
+            "of:0000000000000005",
+            "of:000000000000000a",
+            "of:000000000000000c",
+            "00:00:00:00:00:07/None"
+          ],
+          "weight": 1
+        }
+      ]
+    }
+  ]
+}
+```
+
+
 Submitting a new intent(s): ```/api/push_intent```
 See python example in testClient directory.
 
