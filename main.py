@@ -24,7 +24,7 @@ users = Users()
 
 def load_json(request):
     try:
-        loaded_dict = json.loads(request)
+        loaded_dict = json.loads(request.get_data().decode())
         if not users.authenticate(loaded_dict.get("api_key")):
             abort(401, description="Could not authenticate with the key provided")
     except:
@@ -34,7 +34,7 @@ def load_json(request):
 
 @app.route('/api/push_spp', methods=['GET', 'POST'])
 def push_spp():
-    spp_data = load_json(request.json)
+    spp_data = load_json(request)
     spp_added = spp_manager.add_spp(spp_data, users)
 
     if spp_added:
@@ -46,7 +46,7 @@ def push_spp():
 
 @app.route('/api/push_intent', methods=['GET', 'POST'])
 def push_intent():
-    new_intents = load_json(request.json)
+    new_intents = load_json(request)
     reroute = Reroute()
     routing_dict = reroute.generate_routes()
 
@@ -74,7 +74,7 @@ def get_spp():
 
 @app.route('/api/get_routes', methods=['GET', 'POST'])
 def get_routes():
-    key = load_json(request.json)
+    key = load_json(request)
     # key = {}
     # key["key"] = "00:00:00:00:00:01/None00:00:00:00:00:07/None"
     reroute = Reroute()

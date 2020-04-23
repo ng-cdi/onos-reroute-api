@@ -7,7 +7,7 @@ import requests
 
 def post_json(url, reroute_JSON):
     try:
-        r = requests.post(url, json=reroute_JSON)
+        r = requests.post(url, data=reroute_JSON)
         print(r.status_code)
         print(r.content)
     except IOError as e:

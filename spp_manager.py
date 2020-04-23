@@ -39,7 +39,7 @@ class SppManager:
     def add_spp(self, spp_dict, users):
     
         for spp_json in spp_dict.get("spp"):
-            if spp_json.get("priority")
+            # if spp_json.get("priority"):
             spp = SPP()
             load_errs = spp.load_spp(spp_json, username)
             if not load_errs:

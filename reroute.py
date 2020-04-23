@@ -458,9 +458,33 @@ class Reroute:
         #     "00:00:00:00:00:07/None"
         # ] etctectect....
 
+
+
+         # Dict example for export
+        # "key" : "00:00:00:00:00:01/None00:00:00:00:00:07/None",
+        # "routes" :{
+        # } 2
+        # 0:[
+        #     "00:00:00:00:00:01/None",
+        #     "of:0000000000000001",
+        #     "of:0000000000000007",
+        #     "of:000000000000000c",
+        #     "00:00:00:00:00:07/None"
+        # ],
+        # 1:[
+        #     "00:00:00:00:00:01/None",
+        #     "of:0000000000000001",
+        #     "of:0000000000000007",
+        #     "of:000000000000000c",
+        #     "00:00:00:00:00:07/None"
+        # ] etctectect....
+
+        return_json = {}
+        return_json["key"] = key
         routes = {}
-        routes["key"] = key
-        routes["num_routes"] = "0"
+        return_json["num_routes"] = "0"
+
+
 
         # def parse_routes(route_priority):
         #     for metro_dev in metro_devs:
@@ -475,24 +499,26 @@ class Reroute:
         for metro_dev in metro_devs:
             for core_route in metro_core[metro_dev]:
                 if core_route["num_paths"] == 1:
-                    routes[routes.get("num_routes")] = core_route.get(0)
-                    routes["num_routes"] = str(int(routes["num_routes"]) + 1)
+                    routes[return_json.get("num_routes")] = core_route.get(0)
+                    return_json["num_routes"] = str(int(return_json["num_routes"]) + 1)
         
         # Medium Priority Routes
         for metro_dev in metro_devs:
             for core_route in metro_core[metro_dev]:
                 if core_route["num_paths"] == 2:
-                    routes[routes.get("num_routes")] = core_route.get(0)
-                    routes["num_routes"] = str(int(routes["num_routes"]) + 1)
+                    routes[return_json.get("num_routes")] = core_route.get(0)
+                    return_json["num_routes"] = str(int(return_json["num_routes"]) + 1)
         
         # Low Priority Routes
         for metro_dev in metro_devs:
             for core_route in metro_core[metro_dev]:
                 if core_route["num_paths"] == 2:
-                    routes[routes.get("num_routes")] = core_route.get(1)
-                    routes["num_routes"] = str(int(routes["num_routes"]) + 1)
+                    routes[return_json.get("num_routes")] = core_route.get(1)
+                    return_json["num_routes"] = str(int(return_json["num_routes"]) + 1)
 
-        return routes
+        return_json["routes"] = routes
+
+        return return_json
 
 
         
