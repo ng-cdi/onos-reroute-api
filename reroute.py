@@ -364,6 +364,42 @@ class Reroute:
         #     route = list(dict.fromkeys(route))
         #     routing_dict[key] = route
         # return routing_dict
+        
+
+        # EXAMPLE:
+        # {
+        #     "api_key": "Key_Hereee",
+        #     "routes":[
+        #         {
+        #             "key": "00:00:00:00:00:01/None00:00:00:00:00:07/None",
+        #             "route": [
+        #                 "00:00:00:00:00:01/None",
+        #                 "of:0000000000000001",
+        #                 "of:0000000000000007",
+        #                 "of:000000000000000c",
+        #                 "00:00:00:00:00:07/None"
+        #             ]
+        #         },
+        #         {
+        #             "key": "00:00:00:00:00:02/None00:00:00:00:00:08/None",
+        #             "route": [
+        #                 "00:00:00:00:00:02/None",
+        #                 "of:0000000000000001",
+        #                 "of:0000000000000007",
+        #                 "of:000000000000000c",
+        #                 "00:00:00:00:00:8/None"
+        #             ]
+        #         }
+        #     ]
+        # }
+
+    def routing_abs(self, api_dict):
+        routing_dict = {}
+        for route in api_dict.get("routes"):
+            routing_dict[route.get("key")] = route.get("route")
+        
+        return routing_dict
+
 
 
     def generate_intents(self, routing_dict):

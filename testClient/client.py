@@ -7,7 +7,7 @@ import requests
 
 def post_json(url, reroute_JSON):
     try:
-        r = requests.post(url, json=reroute_JSON)
+        r = requests.post(url, data=reroute_JSON)
         print(r.status_code)
     except IOError as e:
         print(e)
@@ -19,7 +19,7 @@ def post_json(url, reroute_JSON):
 def main():
     with open("reroute.json", 'r') as f:
         reroute_JSON = json.load(f)
-        post_json('http://api-demo.ng-cdi.com/api/push_intent',
+        post_json('http://127.0.0.1:5000/api/push_intent',
                   json.dumps(reroute_JSON))
 
 

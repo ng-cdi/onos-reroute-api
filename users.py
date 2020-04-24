@@ -45,9 +45,14 @@ class Users:
         return False
     
     def get_level(self, key):
+        # Try to match api_key
         for user in self.__users.get("users"):
             if user.get("api_key") == key:
                 return user.get("level")
+        # Try to match username (fallback - is safe as already authed) --- no it's not
+        # for user in self.__users.get("users"):
+        #     if user.get("username") == key:
+        #         return user.get("level")
         return 0
     
     def get_usernames(self):

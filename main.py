@@ -25,8 +25,8 @@ users = Users()
 def load_json(request):
     try:
         loaded_dict = json.loads(request.get_data().decode())
-        if not users.authenticate(loaded_dict.get("api_key")):
-            abort(401, description="Could not authenticate with the key provided")
+        # if not users.authenticate(loaded_dict.get("api_key")):
+        #     abort(401, description="Could not authenticate with the key provided")
     except:
         abort(400, description="Could not parse the json provided")
     
@@ -48,12 +48,13 @@ def push_spp():
 def push_intent():
     new_intents = load_json(request)
     reroute = Reroute()
+    new_intents = reroute.routing_abs(new_intents)
     routing_dict = reroute.generate_routes()
 
     if (reroute.is_intent(routing_dict, new_intents)):
         if not spp_manager.is_spp():
             routing_dict.update(new_intents)
-            # logging.info(json.dumps(reroute.generate_intents(routing_dict, confs.get_config()), indent=4, sort_keys=True))
+            # logging.info(json.dumps(reroute.generate_intents(routing_dict), indent=4, sort_keys=True))
             logging.info(OnosConnect("/onos/v1/imr/imr/reRouteIntents").post(reroute.generate_intents(routing_dict)))
             return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
         else:

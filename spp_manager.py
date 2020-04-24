@@ -36,17 +36,28 @@ class SppManager:
         
         return False
     
-    def add_spp(self, spp_dict, users):
-    
-        for spp_json in spp_dict.get("spp"):
-            # if spp_json.get("priority"):
-            spp = SPP()
-            load_errs = spp.load_spp(spp_json, username)
-            if not load_errs:
-                return load_errs
+    def add_spp(self, spp_dict, users=None):
 
-            self.__service_protection_periods.append(spp)
-        return ""
+        if users == None:
+            for spp_json in spp_dict.get("spp"):
+                spp = SPP()
+                load_errs = spp.load_spp(spp_json, spp_json.get("username"))
+                if not load_errs:
+                    return load_errs
+
+                self.__service_protection_periods.append(spp)
+            return ""
+        
+        else:
+            for spp_json in spp_dict.get("spp"):
+                spp = SPP()
+                load_errs = spp.load_spp(spp_json, spp_json.get("username"))
+                if not load_errs:
+                    return load_errs
+                if spp_json.get("priority") >= users.get_level(spp_dict.get("api_key")):
+                    self.__service_protection_periods.append(spp)
+            return ""
+
 
     def __add_spp(self, spp_dict):
         spp = SPP()
@@ -80,7 +91,7 @@ class SppManager:
     
     def __load(self):
         try:
-            with open('data.json', 'r') as path:
+            with open('spp.json', 'r') as path:
                 imports = json.load(path)
 
             for spp in imports.get("spp"):
