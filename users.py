@@ -62,8 +62,8 @@ class Users:
         return 0
     
     def get_usernames(self):
-        users = []
-        for user in self.__users.get("users"):
-            users.append(user.get("usernamee"))
+        users = self.__users.copy()
+        for user in users.get("users"):
+            del user["api_key"]
         return users
 

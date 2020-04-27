@@ -90,5 +90,9 @@ def get_routes():
 def get_config():
     return jsonify(Configs("json/config.json", "config-default.json").get_config())
 
+@app.route('/api/get_users', methods=['GET'])
+def get_users():
+    return jsonify(users.get_usernames())
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0')

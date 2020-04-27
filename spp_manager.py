@@ -77,7 +77,6 @@ class SppManager:
             export_json["uuid"] = spp.get_uuid()
             exports.append(export_json)
 
-        
         spp_export = {}
         spp_export["spp"]  = exports
 
