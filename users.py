@@ -1,6 +1,8 @@
 import json, base64
 import logging
-import hashlib
+import hashlib, copy
+from flask_table import Table, Col
+
 
 logging.basicConfig(level=logging.INFO)
 
@@ -61,9 +63,33 @@ class Users:
         #         return user.get("level")
         return 0
     
-    def get_usernames(self):
-        users = self.__users.copy()
+    def get_users(self):
+        users = copy.deepcopy(self.__users)
         for user in users.get("users"):
             del user["api_key"]
         return users
+    
+    def get_user_table(self):        
+        items = []
+        for user in self.get_users().get("users"):
+            items.append(Item(user.get("username"), user.get("level"), user.get("hashed_api_key")))
+        table = ItemTable(items)
+        
+        return table.__html__()
+
+
+
+# Declare your table
+class ItemTable(Table):
+    classes = ['table table-dark']
+    name = Col('Username')
+    level = Col('Level')
+    hashed_pass = Col('Hashed_Pass')
+
+# Get some objects
+class Item(object):
+    def __init__(self, name, level, hashed_pass):
+        self.name = name
+        self.level = level
+        self.hashed_pass = hashed_pass
 

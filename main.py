@@ -92,7 +92,11 @@ def get_config():
 
 @app.route('/api/get_users', methods=['GET'])
 def get_users():
-    return jsonify(users.get_usernames())
+    return jsonify(users.get_users())
+
+@app.route('/user_table', methods=['GET'])
+def user_table():
+    return render_template("users.html", table = users.get_user_table())
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0')
