@@ -84,7 +84,7 @@ class ItemTable(Table):
     classes = ['table table-dark']
     name = Col('Username')
     level = Col('Level')
-    hashed_pass = Col('Hashed_Pass')
+    hashed_pass = Col('Hashed API Key')
 
 # Get some objects
 class Item(object):
