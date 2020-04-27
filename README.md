@@ -233,6 +233,45 @@ Example response:
 }
 ```
 
+### Get Users
+
+Get current users `/api/get_users`
+
+Example of a valid POST request:
+```json
+{
+    "api_key": "test_key"
+}
+```
+
+Example response:
+``` json
+{
+  "users": [
+    {
+      "hashed_api_key": "0d7bdf6ae4ec4bea34dc95d63ad83c052600b3c01afc35070d8a6a16573482ee",
+      "level": 3,
+      "username": "eleanor"
+    },
+    {
+      "hashed_api_key": "f9e807cf5b1f3c5edea2a16c3cf8496808dd554845b4f6e86894156162c96b02",
+      "level": 3,
+      "username": "marco"
+    },
+    {
+      "hashed_api_key": "92488e1e3eeecdf99f3ed2ce59233efb4b4fb612d5655c0ce9ea52b5a502e655",
+      "level": 1,
+      "username": "test"
+    },
+    {
+      "hashed_api_key": "61436bd76a3920aefcae2b686344649de94ed276e4680a5f4340a048a92f4aa2",
+      "level": 3,
+      "username": "mehdi"
+    }
+  ]
+}
+```
+
 
 
 
