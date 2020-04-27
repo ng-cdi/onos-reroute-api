@@ -41,7 +41,7 @@ class SppManager:
         if users == None:
             for spp_json in spp_dict.get("spp"):
                 spp = SPP()
-                load_errs = spp.load_spp(spp_json, spp_json.get("username"))
+                load_errs = spp.load_spp(spp_json)
                 if not load_errs:
                     return load_errs
 
@@ -51,11 +51,13 @@ class SppManager:
         else:
             for spp_json in spp_dict.get("spp"):
                 spp = SPP()
-                load_errs = spp.load_spp(spp_json, spp_json.get("username"))
+                load_errs = spp.load_spp(spp_json, users.get_user(spp_dict.get("api_key")))
                 if not load_errs:
                     return load_errs
                 if spp_json.get("priority") >= users.get_level(spp_dict.get("api_key")):
                     self.__service_protection_periods.append(spp)
+                else:
+                    return "User [" + users.get_user(spp_dict.get("api_key")) + "] level [" + users.get_level(spp_dict.get("api_key")) + "] is not authorised to create an SPP for that Priority Level [" + spp_json.get("priority") + "]"
             return ""
 
 

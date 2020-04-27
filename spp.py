@@ -13,6 +13,7 @@ class SPP:
         self.__end_time = datetime.datetime.now()
         self.__username = ""
         self.__priority = 10
+        self.__uuid = ""
 
     def load_spp(self, spp_dict, username=None):
         if username is None:
@@ -21,6 +22,7 @@ class SPP:
             self.__start_time = dateutil.parser.parse(spp_dict.get("start_time"))
             self.__end_time = dateutil.parser.parse(spp_dict.get("end_time"))
             self.__priority = spp_dict.get("priority")
+            self.__uuid = spp_dict.get("uuid")
             return ""
         else:
             self.__username = username

@@ -32,6 +32,12 @@ class Users:
                 return user.get("api_key")  
         return ""
     
+    def get_user(self, key):
+        for user in self.__users.get("users"):
+            if user.get("api_key") == key:
+                return user.get("username")  
+        return ""
+    
     def get_hashed_key(self, username):
         for user in self.__users.get("users"):
             if user.get("username") == username:
