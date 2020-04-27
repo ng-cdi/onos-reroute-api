@@ -25,8 +25,8 @@ users = Users()
 def load_json(request):
     try:
         loaded_dict = json.loads(request.get_data().decode())
-        # if not users.authenticate(loaded_dict.get("api_key")):
-        #     abort(401, description="Could not authenticate with the key provided")
+        if not users.authenticate(loaded_dict.get("api_key")):
+            abort(401, description="Could not authenticate with the key provided")
     except:
         abort(400, description="Could not parse the json provided")
     
@@ -42,7 +42,10 @@ def push_spp():
 
     return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}     
 
-
+@app.route('/api/get_spp', methods=['GET', 'POST'])
+def get_spp():
+    # load_json(request)
+    return jsonify(spp_manager.export())   
 
 @app.route('/api/push_intent', methods=['GET', 'POST'])
 def push_intent():
@@ -52,13 +55,14 @@ def push_intent():
     routing_dict = reroute.generate_routes()
 
     if (reroute.is_intent(routing_dict, new_intents)):
-        if not spp_manager.is_spp():
+        if spp_manager.is_spp():
+            abort(409, description="Could not modify Intents - Service Protection Period")
+        else:
             routing_dict.update(new_intents)
             # logging.info(json.dumps(reroute.generate_intents(routing_dict), indent=4, sort_keys=True))
             logging.info(OnosConnect("/onos/v1/imr/imr/reRouteIntents").post(reroute.generate_intents(routing_dict)))
             return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
-        else:
-            abort(409, description="Could not modify Intents - Service Protection Period")
+
     else:
         abort(406, description="Could accept the intent provided")
 
@@ -70,8 +74,8 @@ def get_intents():
     return jsonify(reroute.generate_intents(routing_dict))
 
 @app.route('/api/is_spp', methods=['GET'])
-def get_spp():
-    return json.dumps({'spp': spp_manager.is_spp()}), 200, {'ContentType': 'application/json'}
+def is_spp():
+    return jsonify({"spp":spp_manager.is_spp()})
 
 @app.route('/api/get_routes', methods=['GET', 'POST'])
 def get_routes():

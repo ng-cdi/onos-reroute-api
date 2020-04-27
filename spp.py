@@ -2,6 +2,7 @@ import json
 import logging
 import datetime
 import dateutil.parser
+import uuid, pytz
 
 logging.basicConfig(level=logging.INFO)
 
@@ -26,6 +27,7 @@ class SPP:
             return ""
         else:
             self.__username = username
+            self.__uuid = str(uuid.uuid4())
             try:
                 if isinstance(spp_dict.get("enabled"), bool):
                     self.__enabled = spp_dict.get("enabled")
@@ -61,7 +63,9 @@ class SPP:
             return ""
 
     def __is_spp_time(self):
-        now = datetime.datetime.now()
+        now = datetime.datetime.now(pytz.timezone("UTC"))
+        print(now)
+        print(self.__start_time)
         if self.__start_time < now and self.__end_time > now:
             return True
         return False
@@ -76,6 +80,15 @@ class SPP:
     
     def disable(self):
         self.__enabled = False
+    
+    def get_username(self):
+        return self.__username
+    
+    def get_uuid(self):
+        return self.__uuid
+    
+    def get_priority(self):
+        return self.__priority
     
     def get_enabled(self):
         return self.__enabled

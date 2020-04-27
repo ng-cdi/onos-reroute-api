@@ -5,7 +5,8 @@ WORKDIR /reroute
 
 RUN pip3 install Flask \
   requests \
-  python-dateutil
+  python-dateutil \
+  pytz
 
 COPY . /reroute
 

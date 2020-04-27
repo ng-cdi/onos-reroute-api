@@ -3,9 +3,9 @@
     "spp":[
         {
             "priority": 10,
-            "enabled": "True",
+            "enabled": true,
             "start_time": "2020-04-07T16:29:59+0000",
-            "end_time": "2020-04-07T16:29:59+0000"
+            "end_time": "2020-05-07T16:29:59+0000"
         }
     ]
 }
