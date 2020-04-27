@@ -194,19 +194,42 @@ Example of a valid POST request:
 {
     "api_key": "test_key"
 }
+```
 
 Example response:
 ``` json
 {
-    "api_key": "test_key",
     "spp":[
         {
-            "priority": 10,
             "enabled": "True",
+            "username": "Eleanor",
+            "priority": 4,
             "start_time": "2020-04-07T16:29:59+0000",
-            "end_time": "2020-04-07T16:29:59+0000"
+            "end_time": "2020-04-07T16:29:59+0000",
+            "uuid": "auuiddd"
         }
     ]
+}
+```
+
+### Get Config
+
+Get the currently installed config `/api/get_config`
+
+Example of a valid POST request:
+```json
+{
+    "api_key": "test_key"
+}
+```
+
+Example response:
+``` json
+{
+	"host" : "onos.com", 
+	"port" : "80",
+	"username" : "onos",
+	"password" : "rocks" 
 }
 ```
 
