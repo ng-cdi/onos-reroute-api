@@ -25,6 +25,7 @@ class Reroute:
                 return True
         return False
 
+    # Okay, so I know this is terrible, but it's a quick and drity bodge for small topos... and is it stupid if it works?
     def __calculate_path(self, devices, links_dict, src_sw, dst_sw):
         current_devices = []
         shuffle_devices = devices.copy()
