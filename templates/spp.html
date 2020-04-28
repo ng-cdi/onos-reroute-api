@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8">
-    <title>Users</title>
+    <title>SPP - Overview</title>
     <!-- <meta name="viewport" content="initial-scale=1, maximum-scale=1" />
     <meta name="viewport" content="width=device-width" /> -->
     <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='styles/bootstrap.css') }}">    
@@ -102,7 +102,7 @@
     <div class="container">
         <h1>SPP - System Overview</h1>
         <br>
-        <p>Current Service Protection Period Satus: {{ spp_status|safe }}</p>
+        <p>Current Service Protection Period Status: {{ spp_status|safe }}</p>
         <br>
         {{ table|safe }}
         <br>
