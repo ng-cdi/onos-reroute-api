@@ -1,6 +1,14 @@
 # API for changing ONOS intents
 
-## Usage:
+## HTML Endpoints:
+
+### User Overview
+User overview table, detail usernames, user level and api_key hashed with sha256: `/user_table`
+
+### SPP Overview
+Service Protection Periods Overview - is SPP Enabled/Disabled, list installed SPPs with username, level, start time, end time, if it's enabled and whether it is currently active `/spp_table`
+
+## API Endpoints:
 
 ### Get Intents
 
