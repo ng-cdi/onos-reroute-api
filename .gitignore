@@ -4,3 +4,4 @@ config.json
 temp.json
 
 __pycache__/*
+__pycache__
