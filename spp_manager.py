@@ -1,5 +1,6 @@
 import logging, datetime, json, traceback, sys
 from spp import SPP
+from flask_table import Table, Col
 
 logging.basicConfig(level=logging.INFO)
 
@@ -30,10 +31,15 @@ class SppManager:
         
         return unactive_spp
     
-    def is_spp(self):
-        for spp in self.__service_protection_periods:
-            if spp.is_spp():
-                return True
+    def is_spp(self, users=None, api_key=None):
+        if users == None:
+            for spp in self.__service_protection_periods:
+                if spp.is_spp():
+                    return True
+        else:
+            for spp in self.__service_protection_periods:
+                if spp.is_spp() and users.get_level(api_key) >= spp.get_priority():
+                    return True
         
         return False
     
@@ -102,6 +108,40 @@ class SppManager:
             logging.warning("Couldn't load SPP json. Continuing...")
             traceback.print_exc(file=sys.stdout)
 
+    def get_spp_table(self):        
+        items = []
+        for spp in self.__service_protection_periods:
+            items.append(Item(spp.get_username(), str(spp.get_priority()), str(spp.get_start_time()), str(spp.get_end_time()), str(spp.get_enabled()), str(spp.is_spp())))
+        table = ItemTable(items)
+        
+        return table.__html__()
+    
+    def get_active_button(self):
+        if self.is_spp():
+            return '<button type="button" class="btn btn-danger">SPP Enabled</button>'
+        return '<button type="button" class="btn btn-success">SPP Disabled</button>'
+
+
+
+# Declare your table
+class ItemTable(Table):
+    classes = ['table table-dark']
+    name = Col('Username')
+    level = Col('Level')
+    start_time = Col('Start Time')
+    end_time = Col('End Time')
+    enabled = Col('Enabled')
+    active = Col('Active')
+
+# Get some objects
+class Item(object):
+    def __init__(self, name, level, start_time, end_time, enabled, active):
+        self.name = name
+        self.level = level
+        self.start_time = start_time
+        self.end_time = end_time
+        self.enabled = enabled
+        self.active = active
 
         
             

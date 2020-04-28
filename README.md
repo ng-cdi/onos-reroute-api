@@ -65,7 +65,7 @@ Example of (just two for briefness) an intent response:
 Submitting a new intent(s): ```/api/push_intent```
 See python example in testClient directory.
 
-If the new intent is valid and accpeted by ONOS, a ```200``` code will be returned, otherwise a ```406``` code will be returned. If there is an SPP active a `409` will be returned, and the intent will be rejected.
+If the new intent is valid and accpeted by ONOS, a ```200``` code will be returned, otherwise a ```406``` code will be returned. If there is an SPP active a `409` will be returned, and the intent will be rejected. To override an SPP, you must submit an intent with a user api_key with a higher level than the current spp. See `get_spp` to see what SPP's are active, and at what priority they are. 
 
 Example of a valid new intent request:
 ```json

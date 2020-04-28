@@ -66,7 +66,7 @@ class SPP:
         now = datetime.datetime.now(pytz.timezone("UTC"))
         print(now)
         print(self.__start_time)
-        if self.__start_time < now and self.__end_time > now:
+        if self.__start_time < now and self.__end_time > now and self.__enabled == True:
             return True
         return False
 

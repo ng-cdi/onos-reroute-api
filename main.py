@@ -50,12 +50,13 @@ def get_spp():
 @app.route('/api/push_intent', methods=['GET', 'POST'])
 def push_intent():
     new_intents = load_json(request)
+    api_key = new_intents.get("api_key")
     reroute = Reroute()
     new_intents = reroute.routing_abs(new_intents)
     routing_dict = reroute.generate_routes()
 
-    if (reroute.is_intent(routing_dict, new_intents)):
-        if spp_manager.is_spp():
+    if (reroute.is_intent(routing_dict)):
+        if spp_manager.is_spp(users, api_key):
             abort(409, description="Could not modify Intents - Service Protection Period")
         else:
             routing_dict.update(new_intents)
@@ -97,6 +98,10 @@ def get_users():
 @app.route('/user_table', methods=['GET'])
 def user_table():
     return render_template("users.html", table = users.get_user_table())
+
+@app.route('/spp_table', methods=['GET'])
+def spp_table():
+    return render_template("spp.html", spp_status = spp_manager.get_active_button(), table = spp_manager.get_spp_table())
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0')
