@@ -1,10 +1,11 @@
 import json, base64
-import logging
+import logging, coloredlogs
 import urllib.request, logging
 from configs import Configs
 
 
-logging.basicConfig(level=logging.INFO)
+coloredlogs.install(level='INFO')
+
 
 class OnosAPI:
 

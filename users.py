@@ -1,10 +1,11 @@
 import json, base64
-import logging
+import logging, coloredlogs
 import hashlib, copy
 from flask_table import Table, Col
 
 
-logging.basicConfig(level=logging.INFO)
+coloredlogs.install(level='INFO')
+
 
 class Users:
 

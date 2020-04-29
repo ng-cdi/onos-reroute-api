@@ -2,6 +2,9 @@
 
 ## HTML Endpoints:
 
+### Submit Intent
+Submit intent in structured language: `/` 
+
 ### User Overview
 User overview table, detail usernames, user level and api_key hashed with sha256: `/user_table`
 

@@ -6,15 +6,16 @@ import sys
 import glob
 import uuid
 import json
-import logging
+import logging, coloredlogs
 from flask import Flask, redirect, url_for, request, render_template, send_file, jsonify, make_response, abort
 from configs import Configs
 from spp_manager import SppManager
 from reroute import Reroute
 from onos_api import OnosConnect
 from users import Users
+from intent import Intent
 
-logging.basicConfig(level=logging.INFO)
+coloredlogs.install(level='INFO')
 
 app = Flask(__name__)
 spp_manager =  SppManager()
@@ -22,15 +23,20 @@ users = Users()
 # config = confs.get_config()
 # layers = confs.get_layers()
 
+def auth_key(key):
+    if not users.authenticate("key"):
+        abort(401, description="Could not authenticate with the key provided")
+
 def load_json(request):
     try:
         loaded_dict = json.loads(request.get_data().decode())
-        if not users.authenticate(loaded_dict.get("api_key")):
-            abort(401, description="Could not authenticate with the key provided")
+        auth_key(loaded_dict.get("api_key"))
     except:
         abort(400, description="Could not parse the json provided")
     
     return loaded_dict
+
+# REST Endpoints
 
 @app.route('/api/push_spp', methods=['GET', 'POST'])
 def push_spp():
@@ -55,7 +61,7 @@ def push_intent():
     new_intents = reroute.routing_abs(new_intents)
     routing_dict = reroute.generate_routes()
 
-    if (reroute.is_intent(routing_dict)):
+    if (reroute.is_intent(routing_dict, new_intents)):
         if spp_manager.is_spp(users, api_key):
             abort(409, description="Could not modify Intents - Service Protection Period")
         else:
@@ -95,6 +101,8 @@ def get_config():
 def get_users():
     return jsonify(users.get_users())
 
+# HTML Endpoints
+
 @app.route('/user_table', methods=['GET'])
 def user_table():
     return render_template("users.html", table = users.get_user_table())
@@ -102,6 +110,21 @@ def user_table():
 @app.route('/spp_table', methods=['GET'])
 def spp_table():
     return render_template("spp.html", spp_status = spp_manager.get_active_button(), table = spp_manager.get_spp_table())
+
+@app.route('/', methods=['POST', 'GET'])
+def index():
+    if request.method == 'POST':
+        api_key = request.form['api_key']
+        # auth_key(api_key)
+        intent = Intent(request.form['intent'], api_key, users, spp_manager)
+        parse_errs = intent.parse()
+        if parse_errs: abort(400, description=parse_errs)
+        
+        return render_template('accepted.html')
+
+    else:
+        return render_template('index.html', spp_status = spp_manager.get_active_button())
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0')

@@ -1,10 +1,11 @@
 import json, traceback, copy
-import logging, random, sys
+import coloredlogs, logging, random, sys
 
 from onos_api import OnosAPI
 from configs import Configs
 
-logging.basicConfig(level=logging.INFO)
+coloredlogs.install(level='INFO')
+
 
     # A routing dict entry looks like this:
     # "00:00:00:00:00:02/None00:00:00:00:00:04/None":[

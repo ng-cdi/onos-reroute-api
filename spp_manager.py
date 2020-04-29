@@ -1,8 +1,9 @@
-import logging, datetime, json, traceback, sys
+import coloredlogs, logging, datetime, json, traceback, sys
 from spp import SPP
 from flask_table import Table, Col
 
-logging.basicConfig(level=logging.INFO)
+coloredlogs.install(level='INFO')
+
 
 class SppManager:
 

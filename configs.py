@@ -1,7 +1,7 @@
 import json
-import logging
+import logging, coloredlogs
 
-logging.basicConfig(level=logging.INFO)
+coloredlogs.install(level='INFO')
 
 class Configs:
 

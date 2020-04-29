@@ -5,6 +5,7 @@ WORKDIR /reroute
 
 RUN pip3 install Flask \
   FLASK_TABLE \
+  coloredlogs \
   requests \
   python-dateutil \
   pytz
