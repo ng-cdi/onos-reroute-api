@@ -92,13 +92,14 @@ class Intent:
                 else:
                     routing_dict.update(new_intents)
                     # logging.info(json.dumps(reroute.generate_intents(routing_dict), indent=4, sort_keys=True))
-                    logging.info(OnosConnect("/onos/v1/imr/imr/reRouteIntents").post(reroute.generate_intents(routing_dict)))
-                    return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
+                    logging.info("[Intent]" + str(OnosConnect("/onos/v1/imr/imr/reRouteIntents").post(reroute.generate_intents(routing_dict))))
+                    return False
+                
 
             else:
                 return "Could accept the intent provided"
 
-        if self.__action == "PROTECT":
+        elif self.__action == "PROTECT":
             logging.info("[Intent] Parsing PROTECT intent with best effort time eval")
             date = datetime.date.today().strftime("%Y/%m/%d")
             start = date + "T" + self.__period[1] + ":00+0000"
@@ -111,22 +112,10 @@ class Intent:
             spp_list = []
             spp_list.append(spp)
             self.__spp_manager.add_spp({"api_key": self.__api_key, "spp": spp_list}, self.__users)
-#              {
-#     "api_key": "test_key",
-#     "spp":[
-#         {
-#             "priority": 10,
-#             "enabled": true,
-#             "start_time": "2020-04-07T16:29:59+0000",
-#             "end_time": "2020-05-07T16:29:59+0000"
-#         }
-#     ]
-# }
+            return False
 
-
-
-        
-        return False
-
+        else:
+            logging.info("[Intent] Could not parse the intent: " + self.__plaintext_intent)
+            return "Could not parse the intent: " + self.__plaintext_intent
 
 
