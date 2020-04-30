@@ -24,7 +24,7 @@ users = Users()
 # layers = confs.get_layers()
 
 def auth_key(key):
-    if not users.authenticate("key"):
+    if not users.authenticate(key):
         abort(401, description="Could not authenticate with the key provided")
 
 def load_json(request):
@@ -115,7 +115,8 @@ def spp_table():
 def index():
     if request.method == 'POST':
         api_key = request.form['api_key']
-        # auth_key(api_key)
+        # print(api_key)
+        auth_key(api_key)
         intent = Intent(request.form['intent'], api_key, users, spp_manager)
         parse_errs = intent.parse()
         if parse_errs: abort(400, description=parse_errs)
