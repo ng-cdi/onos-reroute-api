@@ -4,6 +4,7 @@ import hashlib, copy
 from flask_table import Table, Col
 
 
+logger = logging.getLogger(__name__)
 coloredlogs.install(level='INFO')
 
 
@@ -21,7 +22,7 @@ class Users:
         try:
             config = self.__load_json(config)
         except:
-            logging.critical("Could not find configuration file: " + config)
+            logger.critical("Could not find configuration file: " + config)
         return config
     
     def __generate_hash_keys(self):

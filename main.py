@@ -15,7 +15,9 @@ from onos_api import OnosConnect
 from users import Users
 from intent import Intent
 
+logger = logging.getLogger(__name__)
 coloredlogs.install(level='INFO')
+
 
 app = Flask(__name__)
 spp_manager =  SppManager()
@@ -66,11 +68,12 @@ def push_intent():
             abort(409, description="Could not modify Intents - Service Protection Period")
         else:
             routing_dict.update(new_intents)
-            # logging.info(json.dumps(reroute.generate_intents(routing_dict), indent=4, sort_keys=True))
-            logging.info(OnosConnect("/onos/v1/imr/imr/reRouteIntents").post(reroute.generate_intents(routing_dict)))
+            # logger.info(json.dumps(reroute.generate_intents(routing_dict), indent=4, sort_keys=True))
+            logger.info(OnosConnect("/onos/v1/imr/imr/reRouteIntents").post(reroute.generate_intents(routing_dict)))
             return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
 
     else:
+        logger.error("[Main] Could not ")
         abort(406, description="Could accept the intent provided")
 
 

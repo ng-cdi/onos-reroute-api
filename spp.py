@@ -4,8 +4,8 @@ import datetime
 import dateutil.parser
 import uuid, pytz
 
+logger = logging.getLogger(__name__)
 coloredlogs.install(level='INFO')
-
 
 class SPP:
 
@@ -65,8 +65,8 @@ class SPP:
 
     def __is_spp_time(self):
         now = datetime.datetime.now(pytz.timezone("UTC"))
-        logging.info(now)
-        logging.info(self.__start_time)
+        logger.info(now)
+        logger.info(self.__start_time)
         if self.__start_time < now and self.__end_time > now and self.__enabled == True:
             return True
         return False

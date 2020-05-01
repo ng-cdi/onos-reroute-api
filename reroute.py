@@ -4,7 +4,9 @@ import coloredlogs, logging, random, sys
 from onos_api import OnosAPI
 from configs import Configs
 
-coloredlogs.install(level='INFO')
+logger = logging.getLogger(__name__)
+coloredlogs.install(level='DEBUG', logger=logger)
+
 
 
     # A routing dict entry looks like this:
@@ -67,7 +69,7 @@ class Reroute:
 
         for device in route:
             if device not in devices_list:
-                logging.warning(device + ": Device not found")
+                logger.warning(device + ": Device not found")
                 return False
 
         return True
@@ -190,12 +192,12 @@ class Reroute:
 
         # check host connections
         if not self.__is_host_link(route[0], route[1], hosts_dict):
-            logging.warning(
+            logger.warning(
                 key + ": There is no link between the src host and src device")
             return False
 
         if not self.__is_host_link(route[-1], route[-2], hosts_dict):
-            logging.warning(
+            logger.warning(
                 key + ": There is no link between the dst host and dst device")
             return False
 
@@ -205,12 +207,12 @@ class Reroute:
         del link_list[-1]
         # Only one device, must be true - passed the hosts conn test
         if len(link_list) < 2:
-            logging.info(key + ": Single-hop link exists")
+            logger.info(key + ": Single-hop link exists")
             return True
 
         # Check devices exist
         if not self.__devices_exist(link_list, devices_dict):
-            logging.warning(key + ": Device not found")  
+            logger.warning(key + ": Device not found")  
             return False
 
         dst_dev = link_list[-1]
@@ -218,12 +220,12 @@ class Reroute:
         for i in range(len(link_list)):
             # Made it to the destination device
             if link_list[i] == dst_dev:
-                logging.info(key + ": Multi-hop link exists")
+                logger.info(key + ": Multi-hop link exists")
                 return True
 
             # Is there a link to the next device?
             if not self.__is_link(link_list[i], link_list[i + 1], links_dict):
-                logging.warning(key + ": No link between device " +
+                logger.warning(key + ": No link between device " +
                                 link_list[i] + " and device " + link_list[i + 1])
                 return False
 
@@ -234,37 +236,43 @@ class Reroute:
     # Public Methods 
     #################################################
 
+    # There'sa fault in this logic - it only tests the 1st intent..
+
     def is_intent(self, routing_dict, new_intents):
         for key in list(dict.fromkeys(new_intents)):
             # Too short for an intent
             if len(new_intents[key]) < 3:
-                logging.warning(key + " is too short for an intent")
+                logger.error(key + " is too short for an intent")
                 return False
             if not self.__is_key(key, new_intents):
-                logging.warning(key + " does not match the hosts provided: " +
+                logger.error(key + " does not match the hosts provided: " +
                                 new_intents[key][0] + " and " + new_intents[key][-1])
                 return False
             #  Does the key already exist?
             if key not in list(dict.fromkeys(routing_dict)):
                 # Do the hosts exist?
-                logging.info(
-                    key + " does not already exist in current intents list")
+                logger.warning(
+                    key + " does not already exist in current intents list. Trying to continue...")
                 if self.__host_exist(new_intents[key]):
                     # Is it a valid route?
                     if self.__is_route(new_intents[key], key):
                         return True
                     else:
+                        logger.error("Could not validate route for: " + key)
                         return False
                 else:
-                    logging.warning(key + " hosts do not exist on onos")
+                    logger.error("Hosts do not exist on onos' database for: " + key + " Aborting.")
                     return False
             else:
                 # Is it a valid route?
-                logging.info(key + " exists in current intents list")
+                logger.info(key + " exists in current intents list")
                 if self.__is_route(new_intents[key], key):
+                    logger.info(key + " is a valid route. OK to overwrite.")
                     return True
+        logging.error("Finished parsing new_intents. Could not parse new intent. Check syntax.")
         return False
 
+    # This is broken - routes from onos aren't making sense... I think we can ignore **FOR NOW** as onos will ignore routes that don't make sense
     def generate_routes(self):
         hosts_dict            = self.__onos.get_hosts()
         links_dict            = self.__onos.get_links()
@@ -278,65 +286,72 @@ class Reroute:
         monitored_dict = monitoredIntents_dict["response"][0]["intents"]
 
         for monitored_intent in monitored_dict:
-            logging.info("Processing intent: " + monitored_intent["key"])
+            logger.info("Processing intent: " + monitored_intent["key"])
             for intent in intents_dict:
                 if intent.get(monitored_intent["key"], "") != "":
-                    key = monitored_intent.get("key")
-                    route = []
-                    route.append(monitored_intent["inElements"][0])
-                    # one hop intents
-                    if len(intent[monitored_intent["key"]]) == 1:
-                        route.append(intent[monitored_intent["key"]][0]["deviceId"])
-                    
-                    # multi hop intents
-                    # elif len(intent[monitored_intent["key"]]) > 1:
-                    else:
-                        src_sw = ""
-                        dst_sw = ""
-                        devices = []
-                        for i in range(len(intent[key])):
-                            for onos_host in hosts_dict.get("hosts"):
-                                if onos_host["id"] == monitored_intent["inElements"][0] and len(onos_host["locations"][0]["elementId"]) > 2:
-                                    src_sw = onos_host["locations"][0]["elementId"]
-                                elif onos_host["id"] == monitored_intent["outElements"][0] and len(onos_host["locations"][0]["elementId"]) > 2:
-                                    dst_sw = onos_host["locations"][0]["elementId"]
-                            devices.append(intent[key][i]["deviceId"])
-                        
-                        # Remove local and remote switches - see what's left
-                        try:
-                            devices.remove(src_sw)
-                            devices.remove(dst_sw)
-                        except:
-                            logging.warning("Could not remove " + src_sw + " or " + dst_sw + "from path  for " + key + ". Route will not be valid!")
-                            # traceback.print_exc(file=sys.stdout)
-                        try:
-                            # 2 Hops
-                            if len(devices) == 0:
-                                route.append(src_sw)
-                                route.append(dst_sw)
-                            
-                            # 3 Hops
-                            elif len(devices) == 1:
-                                route.append(src_sw)
-                                route.append(devices[0])
-                                route.append(dst_sw)
-                            
-                            # 4 + Hops
-                            elif len(devices) > 1:
-                                route.append(src_sw)
-                                route = route + self.__calculate_path(devices, links_dict, src_sw, dst_sw)
-                            
-                            else:
-                                logging.warning("Could not calculate a route for " + key)
-                        except:
-                            logging.warning("Could not calculate a route for " + key)
-                            # traceback.print_exc(file=sys.stdout)
-                            
+                    # try:
 
-                    route.append(monitored_intent["outElements"][0])     
-                    route = list(dict.fromkeys(route))
-                    routing_dict[key] = route
-        
+                        key = monitored_intent.get("key")
+                        route = []
+                        route.append(monitored_intent["inElements"][0])
+                        # one hop intents
+                        if len(intent[monitored_intent["key"]]) == 1:
+                            route.append(intent[monitored_intent["key"]][0]["deviceId"])
+                        
+                        # multi hop intents
+                        # elif len(intent[monitored_intent["key"]]) > 1:
+                        else:
+                            src_sw = ""
+                            dst_sw = ""
+                            devices = []
+                            for i in range(len(intent[key])):
+                                for onos_host in hosts_dict.get("hosts"):
+                                    if onos_host["id"] == monitored_intent["inElements"][0] and len(onos_host["locations"][0]["elementId"]) > 2:
+                                        src_sw = onos_host["locations"][0]["elementId"]
+                                    elif onos_host["id"] == monitored_intent["outElements"][0] and len(onos_host["locations"][0]["elementId"]) > 2:
+                                        dst_sw = onos_host["locations"][0]["elementId"]
+                                devices.append(intent[key][i]["deviceId"])
+                            
+                            # Remove local and remote switches - see what's left
+                            try:
+                                devices.remove(src_sw)
+                                devices.remove(dst_sw)
+                            except:
+                                logger.warning("Devices: " + str(devices) + " for key: " + key)
+                                logger.error("Could not remove " + src_sw + " or " + dst_sw + "from path for " + key + ". This is probably an onos error. Skipping...")
+
+                                # logger.debug(traceback.print_exc(file=sys.stdout))
+                            try:
+                                # 2 Hops
+                                if len(devices) == 0:
+                                    route.append(src_sw)
+                                    route.append(dst_sw)
+                                
+                                # 3 Hops
+                                elif len(devices) == 1:
+                                    route.append(src_sw)
+                                    route.append(devices[0])
+                                    route.append(dst_sw)
+                                
+                                # 4 + Hops
+                                elif len(devices) > 1:
+                                    route.append(src_sw)
+                                    route = route + self.__calculate_path(devices, links_dict, src_sw, dst_sw)
+                                
+                                else:
+                                    logger.error("Reached end of possible number of hops. Could not calculate a route for " + key)
+                            except:           
+                                logger.warning("Devices: " + str(devices) + " for key: " + key)
+                                logger.error("Exception occured trying to calculate a route for " + key + ". This is probably an  onos error. Skipping...")                                
+
+                        route.append(monitored_intent["outElements"][0])     
+                        route = list(dict.fromkeys(route))
+                        routing_dict[key] = route
+                    
+                    # except RuntimeError as err:
+                    #     logger.error(err.args)
+
+        logger.debug((json.dumps(routing_dict, indent=4, sort_keys=True)))
         return routing_dict           
 
 
@@ -435,7 +450,7 @@ class Reroute:
 
         # Check key exists and src is connected to access / dst is connected to core
         if not src_dev and dst_dev:
-            logging.warning("Key '" + key + "' does not exist")
+            logger.warning("Key '" + key + "' does not exist")
             return False
         
         # Get list of devs in metro src_dev has links to 
@@ -445,7 +460,7 @@ class Reroute:
                 metro_devs.append(device)
         
         if len(metro_devs) == 0:
-            logging.warning("Could not find any metro devices for key '" + key + "'")
+            logger.warning("Could not find any metro devices for key '" + key + "'")
             return False
         
 

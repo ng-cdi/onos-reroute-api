@@ -4,8 +4,8 @@ import urllib.request, logging
 from configs import Configs
 
 
+logger = logging.getLogger(__name__)
 coloredlogs.install(level='INFO')
-
 
 class OnosAPI:
 
@@ -65,5 +65,5 @@ class OnosConnect:
 
     def url_builder(self, api):
         url = "http://" + self.__config.get("host") + ":" + self.__config.get("port") + api
-        logging.info("Parsed url: " + url)
+        logger.info("Parsed url: " + url)
         return url

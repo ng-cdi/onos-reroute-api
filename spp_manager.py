@@ -2,8 +2,8 @@ import coloredlogs, logging, datetime, json, traceback, sys
 from spp import SPP
 from flask_table import Table, Col
 
+logger = logging.getLogger(__name__)
 coloredlogs.install(level='INFO')
-
 
 class SppManager:
 
@@ -94,7 +94,7 @@ class SppManager:
             with open('json/spp.json', 'w') as path:
                 json.dump(self.export(), path, sort_keys=True, indent=4)
         except:
-            logging.warning("Couldn't save SPP json. Continuing...")
+            logger.warning("Couldn't save SPP json. Continuing...")
             traceback.print_exc(file=sys.stdout)
     
     def __load(self):
@@ -104,9 +104,9 @@ class SppManager:
     
             errs = self.add_spp(imports)
             if errs:
-                logging.warning(errs)
+                logger.warning(errs)
         except:
-            logging.warning("Couldn't load SPP json. Continuing...")
+            logger.warning("Couldn't load SPP json. Continuing...")
             traceback.print_exc(file=sys.stdout)
 
     def get_spp_table(self):        

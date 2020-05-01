@@ -1,6 +1,7 @@
 import json
 import logging, coloredlogs
 
+logger = logging.getLogger(__name__)
 coloredlogs.install(level='INFO')
 
 class Configs:
@@ -16,7 +17,7 @@ class Configs:
         try:
             config = self.__load_json(config)
         except:
-            logging.critical("Could not find configuration file: " + config)
+            logger.critical("Could not find configuration file: " + config)
             config = self.__load_json(default_config)
         return config
 
