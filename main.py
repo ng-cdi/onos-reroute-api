@@ -14,6 +14,7 @@ from reroute import Reroute
 from onos_api import OnosConnect
 from users import Users
 from intent import Intent
+from testperf import TestPerf
 
 logger = logging.getLogger(__name__)
 coloredlogs.install(level='INFO')
@@ -58,6 +59,7 @@ def get_spp():
 @app.route('/api/push_intent', methods=['GET', 'POST'])
 def push_intent():
     new_intents = load_json(request)
+    logger.info("[push_intent] Recieved New Intent: " + json.dumps(new_intents, indent=4, sort_keys=True))
     api_key = new_intents.get("api_key")
     reroute = Reroute()
     new_intents = reroute.routing_abs(new_intents)
@@ -92,8 +94,10 @@ def get_routes():
     key = load_json(request)
     # key = {}
     # key["key"] = "00:00:00:00:00:01/None00:00:00:00:00:07/None"
+    logger.info("[get_routes] Recieved New Routes Request: " + json.dumps(key, indent=4, sort_keys=True))
     reroute = Reroute()
     routes = reroute.generate_host_to_host_routes(key.get("key"))
+    logger.info("[get_routes] Returned Routes " + json.dumps(routes, indent=4, sort_keys=True))
     return jsonify(routes)
 
 @app.route('/api/get_config', methods=['GET'])
@@ -128,6 +132,11 @@ def index():
 
     else:
         return render_template('index.html', spp_status = spp_manager.get_active_button())
+
+@app.route('/testperf', methods=['POST', 'GET'])
+def test_perf():
+    TestPerf()
+    return render_template('testperf.html')
 
 
 if __name__ == '__main__':
