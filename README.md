@@ -230,7 +230,7 @@ Example response:
 {
     "spp":[
         {
-            "enabled": "True",
+            "enabled": true,
             "username": "Eleanor",
             "priority": 4,
             "start_time": "2020-04-07T16:29:59+0000",
@@ -249,8 +249,7 @@ Example of a valid POST request:
 ```json
 {
     "api_key": "test_key",
-    "uuid": "auuid",
-    "status": true
+    "uuid": "auuid"
 }
 ```
 

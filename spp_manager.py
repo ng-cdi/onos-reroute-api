@@ -1,5 +1,6 @@
 import coloredlogs, logging, datetime, json, traceback, sys
 from spp import SPP
+from users import Users
 from flask_table import Table, Col
 
 logger = logging.getLogger(__name__)
@@ -68,6 +69,16 @@ class SppManager:
         
         self.save()
         return ""
+    
+    def set_spp(self, api_key, uuid):
+        logger.info("Inverting the enabled status for spp [" + uuid + "] with user [" + Users().get_user(api_key) + "]")
+        for spp in self.__service_protection_periods:
+                if spp.get_uuid() == uuid and Users().get_level(api_key) <= spp.get_priority():
+                    spp.invert_status()
+                    return True
+        
+        return False
+
     
     def remove_spp(self):
         return "todo"

@@ -85,6 +85,15 @@ def get_intents():
     routing_dict = reroute.generate_routes()
     return jsonify(reroute.generate_intents(routing_dict))
 
+@app.route('/api/set_spp', methods=['GET', 'POST'])
+def set_spp():
+    spp = load_json(request)
+    logger.info(spp)
+    if not spp_manager.set_spp(spp.get("api_key"), spp.get("uuid")):
+        abort(401, description="Could set status of spp with key provided")
+
+    return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}     
+
 @app.route('/api/is_spp', methods=['GET'])
 def is_spp():
     return jsonify({"spp":spp_manager.is_spp()})

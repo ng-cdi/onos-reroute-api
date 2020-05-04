@@ -76,6 +76,9 @@ class SPP:
             return True
         return False
 
+    def invert_status(self):
+        self.__enabled = not self.__enabled
+
     def enable(self):
         self.__enabled = True
     
