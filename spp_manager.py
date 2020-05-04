@@ -39,7 +39,7 @@ class SppManager:
                     return True
         else:
             for spp in self.__service_protection_periods:
-                if spp.is_spp() and users.get_level(api_key) >= spp.get_priority():
+                if spp.is_spp() and not users.get_level(api_key) >= spp.get_priority():
                     return True
         
         return False

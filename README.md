@@ -196,9 +196,27 @@ Push SPP (service protection period):  `/api/push_spp`
 }
 ```
 
-### Get SPP
+### Is SPP
 
 Is there an SPP active now? `/api/is_spp`
+
+Example of a valid POST request:
+```json
+{
+    "api_key": "test_key"
+}
+```
+
+Example response:
+``` json
+{
+    "spp": true
+}
+```
+
+### Get SPP
+
+Is there an SPP active now? `/api/get_spp`
 
 Example of a valid POST request:
 ```json

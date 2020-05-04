@@ -135,9 +135,18 @@ def index():
 
 @app.route('/testperf', methods=['POST', 'GET'])
 def test_perf():
-    TestPerf()
+    TestPerf().test()
     return render_template('testperf.html')
 
+@app.route('/api/stopperf')
+def stopperf():
+    TestPerf().stop()
+    return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
+
+@app.route('/api/startperf')
+def startperf():
+    TestPerf().test()
+    return json.dumps({'success': True}), 200, {'ContentType': 'application/json'} 
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0')

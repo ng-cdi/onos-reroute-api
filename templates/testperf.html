@@ -6,7 +6,7 @@
     <title>Started Performance Testing</title>
     <!-- <meta name="viewport" content="initial-scale=1, maximum-scale=1" />
     <meta name="viewport" content="width=device-width" /> -->
-    <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='styles/bootstrap.css') }}">    
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='styles/bootstrap.css') }}">
     <style>
         @import url('https://fonts.googleapis.com/css?family=Roboto|Roboto+Condensed&display=swap');
 
@@ -89,11 +89,14 @@
             font-size: 20px;
         }
 
+        .btn {
+            margin-right: 20px;
+            margin-top: 20px;
+        }
+
         .input {
             width: 100%;
         }
-
-
     </style>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 </head>
@@ -103,7 +106,7 @@
     <div class="container">
         <h1>Started Performance Testing</h1>
         <br>
-        <p>Running performance test for 10 mins. Click here to retest: <button class="btn btn-success" onClick="window.location.reload();">Retest</button></p>
+        <p>Running performance test for 10 mins. </p>
         <p>List of tests performed:</p>
         <ul>
             <li>h1 --> h7</li>
@@ -113,7 +116,25 @@
             <li>h5 --> h9</li>
             <li>h6 --> h9</li>
         </ul>
+
+        <p>
+            <button class="btn btn-success" onClick="window.location.reload();">Restart</button>
+            <a href=# id=stopperf><button class="btn btn-danger" id="stopperf" href="#">Stop</button></a>
+        </p>
+
     </div>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <script type=text/javascript>
+            $(function() {
+            $('a#stopperf').bind('click', function() {
+                $.getJSON('/api/stopperf',
+                    function(data) {
+                //do nothing
+                });
+                return false;
+            });
+            });
+    </script>
 </body>
 
 </html>
