@@ -182,6 +182,8 @@ Example of a response, routes are listed from lowest hops to highest:
 
 Push SPP (service protection period):  `/api/push_spp`
 
+Note: The time variables must be in UTC in ISO 8601
+
 ``` json
 {
     "api_key": "test_key",
