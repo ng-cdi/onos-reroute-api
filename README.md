@@ -243,7 +243,7 @@ Example response:
 
 ### Set SPP
 
-Set the enabled status of the spp? `/api/set_spp`
+Toggle the enabled status of the spp - enable or disable: `/api/set_spp`
 
 Example of a valid POST request:
 ```json
@@ -253,7 +253,7 @@ Example of a valid POST request:
 }
 ```
 
-Example response (all installed intents with updated status):
+Example response (all installed spp's with updated status):
 ``` json
 {
     "spp":[

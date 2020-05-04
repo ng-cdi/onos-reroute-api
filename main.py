@@ -92,7 +92,8 @@ def set_spp():
     if not spp_manager.set_spp(spp.get("api_key"), spp.get("uuid")):
         abort(401, description="Could set status of spp with key provided")
 
-    return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}     
+    return jsonify(spp_manager.export())   
+    
 
 @app.route('/api/is_spp', methods=['GET'])
 def is_spp():
