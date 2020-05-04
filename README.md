@@ -241,6 +241,35 @@ Example response:
 }
 ```
 
+### Set SPP
+
+Set the enabled status of the spp? `/api/set_spp`
+
+Example of a valid POST request:
+```json
+{
+    "api_key": "test_key",
+    "uuid": "auuid",
+    "status": true
+}
+```
+
+Example response (all installed intents with updated status):
+``` json
+{
+    "spp":[
+        {
+            "enabled": true,
+            "username": "Eleanor",
+            "priority": 4,
+            "start_time": "2020-04-07T16:29:59+0000",
+            "end_time": "2020-04-07T16:29:59+0000",
+            "uuid": "auuid"
+        }
+    ]
+}
+```
+
 ### Get Config
 
 Get the currently installed config `/api/get_config`
