@@ -216,7 +216,7 @@ Example response:
 
 ### Get SPP
 
-Is there an SPP active now? `/api/get_spp`
+Get a list of all SPP's `/api/get_spp`
 
 Example of a valid POST request:
 ```json
