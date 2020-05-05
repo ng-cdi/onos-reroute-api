@@ -1,8 +1,9 @@
 import json, traceback, copy
 import coloredlogs, logging, random, sys
 
-from onos_api import OnosAPI
+from onos_api import OnosAPI, OnosConnect
 from configs import Configs
+
 
 logger = logging.getLogger(__name__)
 coloredlogs.install(level='DEBUG', logger=logger)
@@ -289,7 +290,7 @@ class Reroute:
             logger.info("Processing intent: " + monitored_intent["key"])
             for intent in intents_dict:
                 if intent.get(monitored_intent["key"], "") != "":
-                    # try:
+                    try:
 
                         key = monitored_intent.get("key")
                         route = []
@@ -318,7 +319,7 @@ class Reroute:
                                 devices.remove(dst_sw)
                             except:
                                 logger.warning("Devices: " + str(devices) + " for key: " + key)
-                                logger.error("Could not remove " + src_sw + " or " + dst_sw + "from path for " + key + ". This is probably an onos error. Skipping...")
+                                raise RuntimeError("Could not remove " + src_sw + " or " + dst_sw + "from path for " + key + ". This is probably an onos error. Skipping...")
 
                                 # logger.debug(traceback.print_exc(file=sys.stdout))
                             try:
@@ -342,14 +343,14 @@ class Reroute:
                                     logger.error("Reached end of possible number of hops. Could not calculate a route for " + key)
                             except:           
                                 logger.warning("Devices: " + str(devices) + " for key: " + key)
-                                logger.error("Exception occured trying to calculate a route for " + key + ". This is probably an  onos error. Skipping...")                                
+                                raise RuntimeError("Exception occured trying to calculate a route for " + key + ". This is probably an  onos error. Skipping...")                                
 
                         route.append(monitored_intent["outElements"][0])     
                         route = list(dict.fromkeys(route))
                         routing_dict[key] = route
                     
-                    # except RuntimeError as err:
-                    #     logger.error(err.args)
+                    except RuntimeError as err:
+                        logger.error(err.args)
 
         logger.debug((json.dumps(routing_dict, indent=4, sort_keys=True)))
         return routing_dict           
@@ -417,7 +418,15 @@ class Reroute:
         
         return routing_dict
 
-
+    def mirror(self, new_intents):
+        mirrored_intents = {}
+        for route in new_intents:
+            key = new_intents.get(route)[-1]+new_intents.get(route)[0]
+            new_route = copy.deepcopy(new_intents.get(route))
+            new_route.reverse()
+            mirrored_intents[key] = new_route
+        new_intents.update(mirrored_intents)
+        return new_intents
 
     def generate_intents(self, routing_dict):
         imr_dict = self.__onos.get_intent_stats()
@@ -573,5 +582,58 @@ class Reroute:
 
         return return_json
 
+    # force reset for demo - not scalable
+    def reset(self):
+        new_intents = {
+            "00:00:00:00:00:01/None00:00:00:00:00:07/None":[
+                "00:00:00:00:00:01/None",
+                "of:0000000000000001",
+                "of:0000000000000007",
+                "of:000000000000000c",
+                "00:00:00:00:00:07/None"
+                ],
+            "00:00:00:00:00:02/None00:00:00:00:00:07/None":[
+                "00:00:00:00:00:02/None",
+                "of:0000000000000002",
+                "of:0000000000000007",
+                "of:000000000000000c",
+                "00:00:00:00:00:07/None"
+                ],
+            "00:00:00:00:00:03/None00:00:00:00:00:08/None":[
+                "00:00:00:00:00:03/None",
+                "of:0000000000000003",
+                "of:0000000000000009",
+                "of:000000000000000d",
+                "00:00:00:00:00:08/None"
+                ],
+            "00:00:00:00:00:04/None00:00:00:00:00:08/None":[
+                "00:00:00:00:00:04/None",
+                "of:0000000000000004",
+                "of:0000000000000009",
+                "of:000000000000000d",
+                "00:00:00:00:00:08/None"
+                ],
+            "00:00:00:00:00:05/None00:00:00:00:00:09/None":[
+                "00:00:00:00:00:05/None",
+                "of:0000000000000005",
+                "of:000000000000000b",
+                "of:000000000000000e",
+                "00:00:00:00:00:09/None"
+                ],
+            "00:00:00:00:00:06/None00:00:00:00:00:09/None":[
+                "00:00:00:00:00:06/None",
+                "of:0000000000000006",
+                "of:000000000000000b",
+                "of:000000000000000e",
+                "00:00:00:00:00:09/None"
+                ]
+            }
+        new_intents = self.mirror(new_intents)
+        logger.info("[reset mirror] " + json.dumps(new_intents, indent=4, sort_keys=True))
+        routing_dict = self.generate_routes()
+        routing_dict.update(new_intents)
+        logger.info(OnosConnect("/onos/v1/imr/imr/reRouteIntents").post(self.generate_intents(routing_dict)))
+        return ""
+    
 
         

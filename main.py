@@ -63,6 +63,7 @@ def push_intent():
     api_key = new_intents.get("api_key")
     reroute = Reroute()
     new_intents = reroute.routing_abs(new_intents)
+    new_intents = reroute.mirror(new_intents)
     routing_dict = reroute.generate_routes()
 
     if (reroute.is_intent(routing_dict, new_intents)):
@@ -79,7 +80,7 @@ def push_intent():
         abort(406, description="Could accept the intent provided")
 
 
-@app.route('/api/get_intents', methods=['GET'])
+@app.route('/api/get_intents', methods=['GET', 'POST'])
 def get_intents():
     reroute = Reroute()
     routing_dict = reroute.generate_routes()
@@ -98,6 +99,14 @@ def set_spp():
 @app.route('/api/is_spp', methods=['GET'])
 def is_spp():
     return jsonify({"spp":spp_manager.is_spp()})
+
+
+@app.route('/api/reset', methods=['GET', 'POST'])
+def reset():
+    load_json(request)
+    Reroute().reset()
+    return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
+
 
 @app.route('/api/get_routes', methods=['GET', 'POST'])
 def get_routes():
