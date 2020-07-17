@@ -2,6 +2,9 @@
 
 ## HTML Endpoints:
 
+### Start Performance Testing
+Start iPerf (or stop): `/testperf`
+
 ### Submit Intent
 Submit intent in structured language: `/` 
 
