@@ -1,5 +1,7 @@
 # API for changing ONOS intents
 
+![Approved](https://img.shields.io/badge/-Fantom%20Approved-FFD700?style=for-the-badge&logo=Ghostery&logoColor=black)
+
 ## HTML Endpoints:
 
 ### Start Performance Testing
