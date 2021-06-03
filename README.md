@@ -25,6 +25,7 @@ Example of a valid POST request:
 {
     "api_key": "test_key"
 }
+```
 
 Example of (just two for briefness) an intent response:
 ```json
